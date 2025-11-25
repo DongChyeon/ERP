@@ -14,6 +14,7 @@ services:
       - "3307:3306"
     volumes:
       - mysql-data:/var/lib/mysql
+      - ./scripts/init_mysql.sql:/docker-entrypoint-initdb.d/init_mysql.sql:ro
 
   # -----------------------
   # 2) MongoDB
