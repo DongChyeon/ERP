@@ -1,0 +1,96 @@
+#############################################
+# Kotlin + Spring Boot (코프링) 모노레포 .gitignore
+#############################################
+
+###############
+# Gradle
+###############
+.gradle/
+**/build/
+**/out/
+**/bin/
+!gradle/wrapper/gradle-wrapper.jar
+
+###############
+# Kotlin
+###############
+*.kt~
+*.kts~
+*.class
+
+###############
+# Spring Boot
+###############
+*.jar
+*.war
+*.ear
+
+###############
+# IntelliJ IDEA
+###############
+.idea/
+*.iml
+*.ipr
+*.iws
+
+###############
+# VSCode
+###############
+.vscode/
+
+###############
+# OS Files
+###############
+.DS_Store
+Thumbs.db
+
+###############
+# Logs / Temp
+###############
+*.log
+*.tmp
+*.swp
+temp/
+
+###############
+# Node (혹시 프런트 or WebSocket 테스트)
+###############
+node_modules/
+dist/
+npm-debug.log
+yarn-error.log
+
+###############
+# Docker
+###############
+*.tar
+docker-data/
+
+###############
+# Proto / gRPC
+###############
+# proto 원본은 commit, 컴파일된 파일은 ignore
+**/*.pb.go
+**/*.pb.cc
+**/*.pb.h
+**/*.pb.java
+**/*.pb.swift
+**/*.pyc
+generated/
+build/generated/
+**/generated/
+
+###############
+# 서비스별 build/log 무시 (명시적으로 표시)
+###############
+employee-service/build/
+employee-service/logs/
+
+approval-request-service/build/
+approval-request-service/logs/
+
+approval-processing-service/build/
+approval-processing-service/logs/
+
+notification-service/build/
+notification-service/logs/
