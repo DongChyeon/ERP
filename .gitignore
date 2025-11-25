@@ -65,6 +65,7 @@ yarn-error.log
 ###############
 *.tar
 docker-data/
+env/secrets
 
 ###############
 # Proto / gRPC

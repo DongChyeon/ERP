@@ -1,0 +1,102 @@
+services:
+  # -----------------------
+  # 1) MySQL
+  # -----------------------
+  mysql:
+    image: mysql:8
+    container_name: mysql-local
+    restart: always
+    env_file:
+      - ./env/secrets
+    environment:
+      MYSQL_DATABASE: erp
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  # -----------------------
+  # 2) MongoDB
+  # -----------------------
+  mongo:
+    image: mongo:7
+    container_name: mongo-local
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  # -----------------------
+  # 3) Employee Service
+  # -----------------------
+  employee-service:
+    build:
+      context: ./employee-service
+      dockerfile: Dockerfile
+    container_name: employee-service
+    depends_on:
+      - mysql
+    env_file:
+      - ./env/secrets
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/erp
+      SPRING_DATASOURCE_USERNAME: root
+
+  # -----------------------
+  # 4) Approval Request Service
+  # -----------------------
+  approval-request-service:
+    build:
+      context: ./approval-request-service
+      dockerfile: Dockerfile
+    container_name: approval-request-service
+    depends_on:
+      - mongo
+      - employee-service
+      - approval-processing-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/erp
+      GRPC_APPROVAL_PROCESSING_HOST: approval-processing-service
+      GRPC_APPROVAL_PROCESSING_PORT: 9090
+      EMPLOYEE_SERVICE_URL: http://employee-service:8081
+
+  # -----------------------
+  # 5) Approval Processing Service
+  # -----------------------
+  approval-processing-service:
+    build:
+      context: ./approval-processing-service
+      dockerfile: Dockerfile
+    container_name: approval-processing-service
+    ports:
+      - "8083:8083"
+      - "9090:9090"  # gRPC 서버 포트
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+  # -----------------------
+  # 6) Notification Service
+  # -----------------------
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: notification-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+
+# -----------------------
+# Volumes (DB 데이터 유지)
+# -----------------------
+volumes:
+  mysql-data:
+  mongo-data:
