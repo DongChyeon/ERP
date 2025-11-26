@@ -8,6 +8,7 @@ import org.dongchyeon.employeeservice.employee.web.dto.EmployeeResponse
 import org.dongchyeon.employeeservice.employee.web.dto.UpdateEmployeeRequest
 import org.springframework.http.HttpStatus
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
@@ -78,5 +79,13 @@ class EmployeeController(
             department = updated.department,
             position = updated.position,
         )
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteEmployee(
+        @PathVariable id: Long,
+    ) {
+        employeeService.deleteEmployee(id)
     }
 }

@@ -55,4 +55,12 @@ class EmployeeService(
 
         return employeeRepository.save(updated)
     }
+
+    @Transactional
+    fun deleteEmployee(id: Long) {
+        val existing = employeeRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("Employee with ID $id not found") }
+
+        employeeRepository.delete(existing)
+    }
 }
