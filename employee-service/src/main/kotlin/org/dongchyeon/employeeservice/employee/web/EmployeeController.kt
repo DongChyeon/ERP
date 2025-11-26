@@ -47,7 +47,6 @@ class EmployeeController(
         @PathVariable id: Long,
     ): EmployeeResponse {
         val employee = employeeService.findEmployeeById(id)
-            ?: throw IllegalArgumentException("Employee with ID $id not found")
 
         return EmployeeResponse(
             id = employee.id ?: error("Employee ID is missing"),

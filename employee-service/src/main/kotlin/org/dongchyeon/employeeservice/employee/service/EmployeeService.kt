@@ -1,5 +1,6 @@
 package org.dongchyeon.employeeservice.employee.service
 
+import org.dongchyeon.employeeservice.employee.exception.EmployeeNotFoundException
 import org.dongchyeon.employeeservice.employee.model.Employee
 import org.dongchyeon.employeeservice.employee.repository.EmployeeRepository
 import org.dongchyeon.employeeservice.employee.web.dto.CreateEmployeeRequest
@@ -39,14 +40,14 @@ class EmployeeService(
     }
 
     @Transactional(readOnly = true)
-    fun findEmployeeById(id: Long): Employee? {
-        return employeeRepository.findById(id).orElse(null)
+    fun findEmployeeById(id: Long): Employee {
+        return employeeRepository.findById(id)
+            .orElseThrow { EmployeeNotFoundException(id) }
     }
 
     @Transactional
     fun updateEmployee(id: Long, request: UpdateEmployeeRequest): Employee {
-        val existing = employeeRepository.findById(id)
-            .orElseThrow { IllegalArgumentException("Employee with ID $id not found") }
+        val existing = findEmployeeById(id)
 
         val updated = existing.copy(
             department = request.department.trim(),
@@ -58,9 +59,10 @@ class EmployeeService(
 
     @Transactional
     fun deleteEmployee(id: Long) {
-        val existing = employeeRepository.findById(id)
-            .orElseThrow { IllegalArgumentException("Employee with ID $id not found") }
+        if (!employeeRepository.existsById(id)) {
+            throw EmployeeNotFoundException(id)
+        }
 
-        employeeRepository.delete(existing)
+        employeeRepository.deleteById(id)
     }
 }
