@@ -23,4 +23,17 @@ class EmployeeService(
 
         return saved.id ?: error("Failed to persist employee")
     }
+
+    @Transactional(readOnly = true)
+    fun findEmployees(department: String?, position: String?): List<Employee> {
+        return when {
+            department.isNullOrBlank() && position.isNullOrBlank() -> employeeRepository.findAll()
+            department.isNullOrBlank() -> employeeRepository.findAllByPosition(position!!.trim())
+            position.isNullOrBlank() -> employeeRepository.findAllByDepartment(department.trim())
+            else -> employeeRepository.findAllByDepartmentAndPosition(
+                department.trim(),
+                position.trim(),
+            )
+        }
+    }
 }
