@@ -1,0 +1,27 @@
+### Create employee
+POST http://localhost:8081/employees
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "department": "Engineering",
+  "position": "Backend Developer"
+}
+
+### List employees (optional filters)
+GET http://localhost:8080/employees?department=Engineering&position=Backend%20Developer
+
+### Get employee by id
+GET http://localhost:8080/employees/1
+
+### Update employee department/position
+PUT http://localhost:8080/employees/1
+Content-Type: application/json
+
+{
+  "department": "Platform",
+  "position": "Tech Lead"
+}
+
+### Delete employee
+DELETE http://localhost:8080/employees/1
