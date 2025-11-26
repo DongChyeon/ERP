@@ -44,8 +44,11 @@ services:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/erp
-      SPRING_DATASOURCE_USERNAME: root
+      DB_HOST: mysql-local
+      DB_PORT: 3306
+      DB_NAME: erp
+      DB_USERNAME: root
+      DB_PASSWORD: root
 
   # -----------------------
   # 4) Approval Request Service
