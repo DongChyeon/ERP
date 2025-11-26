@@ -3,6 +3,7 @@ package org.dongchyeon.employeeservice.employee.service
 import org.dongchyeon.employeeservice.employee.model.Employee
 import org.dongchyeon.employeeservice.employee.repository.EmployeeRepository
 import org.dongchyeon.employeeservice.employee.web.dto.CreateEmployeeRequest
+import org.dongchyeon.employeeservice.employee.web.dto.UpdateEmployeeRequest
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
@@ -40,5 +41,18 @@ class EmployeeService(
     @Transactional(readOnly = true)
     fun findEmployeeById(id: Long): Employee? {
         return employeeRepository.findById(id).orElse(null)
+    }
+
+    @Transactional
+    fun updateEmployee(id: Long, request: UpdateEmployeeRequest): Employee {
+        val existing = employeeRepository.findById(id)
+            .orElseThrow { IllegalArgumentException("Employee with ID $id not found") }
+
+        val updated = existing.copy(
+            department = request.department.trim(),
+            position = request.position.trim(),
+        )
+
+        return employeeRepository.save(updated)
     }
 }

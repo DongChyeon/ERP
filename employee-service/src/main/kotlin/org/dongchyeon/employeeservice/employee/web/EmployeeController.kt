@@ -5,11 +5,13 @@ import org.dongchyeon.employeeservice.employee.service.EmployeeService
 import org.dongchyeon.employeeservice.employee.web.dto.CreateEmployeeRequest
 import org.dongchyeon.employeeservice.employee.web.dto.CreateEmployeeResponse
 import org.dongchyeon.employeeservice.employee.web.dto.EmployeeResponse
+import org.dongchyeon.employeeservice.employee.web.dto.UpdateEmployeeRequest
 import org.springframework.http.HttpStatus
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -61,5 +63,20 @@ class EmployeeController(
     ): CreateEmployeeResponse {
         val id = employeeService.createEmployee(request)
         return CreateEmployeeResponse(id)
+    }
+
+    @PutMapping("/{id}")
+    fun updateEmployee(
+        @PathVariable id: Long,
+        @Valid @RequestBody request: UpdateEmployeeRequest,
+    ): EmployeeResponse {
+        val updated = employeeService.updateEmployee(id, request)
+
+        return EmployeeResponse(
+            id = updated.id ?: error("Employee ID is missing"),
+            name = updated.name,
+            department = updated.department,
+            position = updated.position,
+        )
     }
 }
