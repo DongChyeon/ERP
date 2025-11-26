@@ -8,6 +8,7 @@ import org.dongchyeon.employeeservice.employee.web.dto.EmployeeResponse
 import org.springframework.http.HttpStatus
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -36,6 +37,21 @@ class EmployeeController(
                     position = employee.position,
                 )
             }
+    }
+
+    @GetMapping("/{id}")
+    fun getEmployeeById(
+        @PathVariable id: Long,
+    ): EmployeeResponse {
+        val employee = employeeService.findEmployeeById(id)
+            ?: throw IllegalArgumentException("Employee with ID $id not found")
+
+        return EmployeeResponse(
+            id = employee.id ?: error("Employee ID is missing"),
+            name = employee.name,
+            department = employee.department,
+            position = employee.position,
+        )
     }
 
     @PostMapping

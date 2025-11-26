@@ -36,4 +36,9 @@ class EmployeeService(
             )
         }
     }
+
+    @Transactional(readOnly = true)
+    fun findEmployeeById(id: Long): Employee? {
+        return employeeRepository.findById(id).orElse(null)
+    }
 }
