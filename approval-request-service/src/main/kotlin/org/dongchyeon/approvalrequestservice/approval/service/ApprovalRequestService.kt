@@ -8,8 +8,10 @@ import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStatus
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalRequest
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalResponse
+import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.FinalStatus
 import org.dongchyeon.approvalrequestservice.approval.repository.ApprovalRequestRepository
+import org.dongchyeon.approvalrequestservice.employee.EmployeeServiceClient
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -18,8 +20,12 @@ import org.springframework.web.server.ResponseStatusException
 class ApprovalRequestService(
     private val repository: ApprovalRequestRepository,
     private val sequenceGeneratorService: SequenceGeneratorService,
+    private val employeeServiceClient: EmployeeServiceClient,
 ) {
     fun create(request: CreateApprovalRequest): CreateApprovalResponse {
+        validateStepsSequence(request.steps)
+        validateEmployees(request)
+
         val requestId = sequenceGeneratorService.generateApprovalRequestId()
         val steps = request.steps.map { step ->
             ApprovalStep(
@@ -41,6 +47,25 @@ class ApprovalRequestService(
 
         repository.save(document)
         return CreateApprovalResponse(requestId)
+    }
+
+    private fun validateEmployees(request: CreateApprovalRequest) {
+        employeeServiceClient.ensureEmployeeExists(request.requesterId)
+        request.steps.forEach { step ->
+            employeeServiceClient.ensureEmployeeExists(step.approverId)
+        }
+    }
+
+    private fun validateStepsSequence(steps: List<CreateApprovalStep>) {
+        steps.forEachIndexed { index, step ->
+            val expectedStep = index + 1
+            if (step.step != expectedStep) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Approval steps must start at 1 and increment by 1. Expected $expectedStep but got ${step.step}",
+                )
+            }
+        }
     }
 
     fun getApprovalRequests(): List<ApprovalRequestResponse> =
