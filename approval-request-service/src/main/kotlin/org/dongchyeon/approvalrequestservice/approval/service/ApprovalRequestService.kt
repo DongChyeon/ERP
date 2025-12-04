@@ -1,7 +1,9 @@
 package org.dongchyeon.approvalrequestservice.approval.service
 
 import java.time.Instant
+import io.grpc.StatusRuntimeException
 import org.dongchyeon.approvalrequestservice.approval.common.SequenceGeneratorService
+import org.dongchyeon.approvalrequestservice.approval.grpc.ApprovalProcessingGrpcClient
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestDocument
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestResponse
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStep
@@ -21,6 +23,7 @@ class ApprovalRequestService(
     private val repository: ApprovalRequestRepository,
     private val sequenceGeneratorService: SequenceGeneratorService,
     private val employeeServiceClient: EmployeeServiceClient,
+    private val approvalProcessingGrpcClient: ApprovalProcessingGrpcClient,
 ) {
     fun create(request: CreateApprovalRequest): CreateApprovalResponse {
         validateStepsSequence(request.steps)
@@ -45,8 +48,21 @@ class ApprovalRequestService(
             createdAt = Instant.now(),
         )
 
+        sendToProcessing(document)
         repository.save(document)
         return CreateApprovalResponse(requestId)
+    }
+
+    private fun sendToProcessing(document: ApprovalRequestDocument) {
+        try {
+            approvalProcessingGrpcClient.forward(document)
+        } catch (ex: StatusRuntimeException) {
+            throw ResponseStatusException(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Approval Processing Service unavailable",
+                ex,
+            )
+        }
     }
 
     private fun validateEmployees(request: CreateApprovalRequest) {
