@@ -1,0 +1,13 @@
+### Create approval request
+POST http://localhost:8082/approvals
+Content-Type: application/json
+
+{
+  "requesterId": 1,
+  "title": "Expense Report",
+  "content": "Travel expenses",
+  "steps": [
+    { "step": 1, "approverId": 3 },
+    { "step": 2, "approverId": 7 }
+  ]
+}
