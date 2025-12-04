@@ -3,13 +3,16 @@ package org.dongchyeon.approvalrequestservice.approval.service
 import java.time.Instant
 import org.dongchyeon.approvalrequestservice.approval.common.SequenceGeneratorService
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestDocument
+import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestResponse
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStatus
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalRequest
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalResponse
 import org.dongchyeon.approvalrequestservice.approval.model.FinalStatus
 import org.dongchyeon.approvalrequestservice.approval.repository.ApprovalRequestRepository
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class ApprovalRequestService(
@@ -39,4 +42,28 @@ class ApprovalRequestService(
         repository.save(document)
         return CreateApprovalResponse(requestId)
     }
+
+    fun getApprovalRequests(): List<ApprovalRequestResponse> =
+        repository.findAll().map { it.toResponse() }
+
+    fun getApprovalRequest(requestId: Long): ApprovalRequestResponse =
+        repository.findById(requestId)
+            .map { it.toResponse() }
+            .orElseThrow {
+                ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Approval request $requestId not found",
+                )
+            }
+
+    private fun ApprovalRequestDocument.toResponse(): ApprovalRequestResponse =
+        ApprovalRequestResponse(
+            requestId = requestId,
+            requesterId = requesterId,
+            title = title,
+            content = content,
+            steps = steps,
+            finalStatus = finalStatus,
+            createdAt = createdAt,
+        )
 }

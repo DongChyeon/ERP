@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
+import java.time.Instant
 
 /**
  * API payloads used for creating approval requests.
@@ -29,4 +30,14 @@ data class CreateApprovalStep(
 
 data class CreateApprovalResponse(
     val requestId: Long,
+)
+
+data class ApprovalRequestResponse(
+    val requestId: Long,
+    val requesterId: Long,
+    val title: String,
+    val content: String,
+    val steps: List<ApprovalStep>,
+    val finalStatus: FinalStatus,
+    val createdAt: Instant,
 )

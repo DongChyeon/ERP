@@ -11,3 +11,9 @@ Content-Type: application/json
     { "step": 2, "approverId": 7 }
   ]
 }
+
+### Get all approval requests
+GET http://localhost:8082/approvals
+
+### Get a single approval request
+GET http://localhost:8082/approvals/1
