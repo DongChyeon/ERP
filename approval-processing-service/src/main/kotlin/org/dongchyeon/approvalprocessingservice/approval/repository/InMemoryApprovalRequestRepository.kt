@@ -6,25 +6,38 @@ import org.springframework.stereotype.Repository
 
 @Repository
 class InMemoryApprovalRequestRepository {
-    private val storage: HashMap<Int, ApprovalRequest> = HashMap()
+    private val storage: MutableMap<Long, ApprovalRequest> = mutableMapOf()
 
     fun save(request: ApprovalRequest): ApprovalRequest = request.also {
-        storage[request.requestId.toInt()] = request
+        val approverId = request.steps.firstOrNull()?.approverId
+            ?: throw IllegalArgumentException("Approval request ${request.requestId} must contain at least one approver")
+        storage[approverId] = request
     }
 
-    fun findById(id: Int): ApprovalRequest? = storage[id]
+    fun findById(id: Int): ApprovalRequest? = findByRequestId(id.toLong())
 
-    fun findByRequestId(requestId: Long): ApprovalRequest? = storage[requestId.toInt()]
+    fun findByRequestId(requestId: Long): ApprovalRequest? =
+        storage.values.firstOrNull { it.requestId == requestId }
 
     fun findAll(): List<ApprovalRequest> = storage.values.toList()
 
     fun findPendingByApproverId(approverId: Long): List<ApprovalRequest> =
-        storage.values.filter { request ->
-            request.steps.any { it.approverId == approverId && it.status == ApprovalStatus.PENDING }
-        }
+        storage[approverId]
+            ?.takeIf { request ->
+                request.steps.any { it.approverId == approverId && it.status == ApprovalStatus.PENDING }
+            }
+            ?.let { listOf(it) }
+            ?: emptyList()
 
     fun deleteById(id: Int) {
-        storage.remove(id)
+        val iterator = storage.entries.iterator()
+        while (iterator.hasNext()) {
+            val entry = iterator.next()
+            if (entry.value.requestId == id.toLong()) {
+                iterator.remove()
+                break
+            }
+        }
     }
 
     fun clear() {
