@@ -26,7 +26,7 @@ class ApprovalResultGrpcService(
             val command = request.toCommand()
             approvalRequestService.applyApprovalResult(command)
             ApprovalResultResponse.newBuilder()
-                .setStatus("updated")
+                .setStatus(request.status)
                 .build()
         }.onSuccess { response ->
             log.info(

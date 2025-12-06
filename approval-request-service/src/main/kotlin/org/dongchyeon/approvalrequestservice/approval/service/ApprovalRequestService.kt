@@ -136,10 +136,10 @@ class ApprovalRequestService(
             )
         }
 
-        val finalStatus = when (command.status) {
-            ApprovalStatus.APPROVED -> FinalStatus.APPROVED
-            ApprovalStatus.REJECTED -> FinalStatus.REJECTED
-            ApprovalStatus.PENDING -> throw IllegalArgumentException("Status must be approved or rejected")
+        val finalStatus = when {
+            updatedSteps.any { it.status == ApprovalStatus.REJECTED } -> FinalStatus.REJECTED
+            updatedSteps.all { it.status == ApprovalStatus.APPROVED } -> FinalStatus.APPROVED
+            else -> FinalStatus.IN_PROGRESS
         }
 
         return copy(
