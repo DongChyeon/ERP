@@ -25,11 +25,17 @@ class GrpcServerLifecycle(
             return
         }
 
-        server = ServerBuilder.forPort(port)
-            .addService(approvalResultGrpcService)
-            .build()
-            .start()
-        log.info("gRPC Approval result server started on port {}", port)
+        try {
+            server = ServerBuilder.forPort(port)
+                .addService(approvalResultGrpcService)
+                .build()
+                .start()
+            log.info("gRPC Approval result server started on port {}", port)
+        } catch (ex: Exception) {
+            log.error("Failed to start gRPC Approval result server on port {}", port, ex)
+            running.set(false)
+            throw ex
+        }
     }
 
     override fun stop() {
