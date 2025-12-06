@@ -41,8 +41,8 @@ class ApprovalProcessingGrpcClient(
     private fun ApprovalRequestDocument.toProto(): ApprovalOuterClass.ApprovalRequest {
         val stepsProto = steps.map { it.toProto() }
         return ApprovalOuterClass.ApprovalRequest.newBuilder()
-            .setRequestId(requestId.toInt())
-            .setRequesterId(requesterId.toInt())
+            .setRequestId(requestId)
+            .setRequesterId(requesterId)
             .setTitle(title)
             .setContent(content)
             .addAllSteps(stepsProto)
@@ -52,7 +52,7 @@ class ApprovalProcessingGrpcClient(
     private fun ApprovalStep.toProto(): ApprovalOuterClass.Step =
         ApprovalOuterClass.Step.newBuilder()
             .setStep(step)
-            .setApproverId(approverId.toInt())
+            .setApproverId(approverId)
             .setStatus(status.value)
             .build()
 }

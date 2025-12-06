@@ -11,13 +11,13 @@ service Approval {
 
 message Step {
   int32 step = 1;
-  int32 approverId = 2;
+  int64 approverId = 2;
   string status = 3; // pending, approved, rejected
 }
 
 message ApprovalRequest {
-  int32 requestId = 1;
-  int32 requesterId = 2;
+  int64 requestId = 1;
+  int64 requesterId = 2;
   string title = 3;
   string content = 4;
   repeated Step steps = 5;
@@ -28,9 +28,9 @@ message ApprovalResponse {
 }
 
 message ApprovalResultRequest {
-  int32 requestId = 1;
+  int64 requestId = 1;
   int32 step = 2;
-  int32 approverId = 3;
+  int64 approverId = 3;
   string status = 4; // approved or rejected
 }
 

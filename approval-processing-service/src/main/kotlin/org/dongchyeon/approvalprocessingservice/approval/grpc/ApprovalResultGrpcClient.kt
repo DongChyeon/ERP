@@ -24,9 +24,9 @@ class ApprovalResultGrpcClient(
 
     fun sendResult(result: ApprovalResultPayload) {
         val request = ApprovalOuterClass.ApprovalResultRequest.newBuilder()
-            .setRequestId(result.requestId.toInt())
+            .setRequestId(result.requestId)
             .setStep(result.step)
-            .setApproverId(result.approverId.toInt())
+            .setApproverId(result.approverId)
             .setStatus(result.status.value)
             .build()
         blockingStub
