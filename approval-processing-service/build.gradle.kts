@@ -24,6 +24,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.grpc:grpc-netty-shaded:1.64.0")
     implementation("io.grpc:grpc-protobuf:1.64.0")

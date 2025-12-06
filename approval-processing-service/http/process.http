@@ -5,3 +5,11 @@ Accept: application/json
 ### 대기 중인 요청이 없을 때
 GET http://localhost:8083/process/2
 Accept: application/json
+
+### 결재 결과 전달
+POST http://localhost:8083/process/1/15
+Content-Type: application/json
+
+{
+  "status": "approved"
+}

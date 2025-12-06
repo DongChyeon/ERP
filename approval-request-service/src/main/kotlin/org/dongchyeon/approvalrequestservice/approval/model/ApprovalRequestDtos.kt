@@ -40,4 +40,5 @@ data class ApprovalRequestResponse(
     val steps: List<ApprovalStep>,
     val finalStatus: FinalStatus,
     val createdAt: Instant,
+    val updatedAt: Instant?,
 )

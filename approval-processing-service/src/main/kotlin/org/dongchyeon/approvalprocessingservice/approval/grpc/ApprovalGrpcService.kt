@@ -30,7 +30,7 @@ class ApprovalGrpcService(
             val approvalRequest = request.toDomain()
             repository.save(approvalRequest)
             ApprovalResponse.newBuilder()
-                .setStatus("stored")
+                .setStatus("received")
                 .build()
         }.onSuccess { response ->
             responseObserver.onNext(response)

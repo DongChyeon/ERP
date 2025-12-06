@@ -64,6 +64,7 @@ services:
       - approval-processing-service
     ports:
       - "8082:8082"
+      - "50052:50052"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8082
@@ -71,6 +72,7 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/erp
       APPROVAL_PROCESSING_GRPC_HOST: approval-processing-service
       APPROVAL_PROCESSING_GRPC_PORT: 9090
+      APPROVAL_RESULT_GRPC_PORT: 50052
       EMPLOYEE_SERVICE_URL: http://employee-service:8081
       TOMCAT_BASEDIR: /tmp/approval-request-service/tomcat
       JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=/tmp/approval-request-service/tmp -Dserver.tomcat.basedir=/tmp/approval-request-service/tomcat"
@@ -90,6 +92,8 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8083
       APPROVAL_GRPC_PORT: 9090
+      APPROVAL_RESULT_GRPC_HOST: approval-request-service
+      APPROVAL_RESULT_GRPC_PORT: 50052
 
   # -----------------------
   # 6) Notification Service

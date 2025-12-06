@@ -1,11 +1,12 @@
 package org.dongchyeon.approvalrequestservice.approval.service
 
-import java.time.Instant
 import io.grpc.StatusRuntimeException
+import java.time.Instant
 import org.dongchyeon.approvalrequestservice.approval.common.SequenceGeneratorService
 import org.dongchyeon.approvalrequestservice.approval.grpc.ApprovalProcessingGrpcClient
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestDocument
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestResponse
+import org.dongchyeon.approvalrequestservice.approval.model.ApprovalResultCommand
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStatus
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalRequest
@@ -46,6 +47,7 @@ class ApprovalRequestService(
             steps = steps,
             finalStatus = FinalStatus.IN_PROGRESS,
             createdAt = Instant.now(),
+            updatedAt = null,
         )
 
         sendToProcessing(document)
@@ -97,6 +99,12 @@ class ApprovalRequestService(
                 )
             }
 
+    fun applyApprovalResult(command: ApprovalResultCommand) {
+        val document = repository.findById(command.requestId)
+            .orElseThrow { NoSuchElementException("Approval request ${command.requestId} not found") }
+        repository.save(document.applyResult(command))
+    }
+
     private fun ApprovalRequestDocument.toResponse(): ApprovalRequestResponse =
         ApprovalRequestResponse(
             requestId = requestId,
@@ -106,5 +114,38 @@ class ApprovalRequestService(
             steps = steps,
             finalStatus = finalStatus,
             createdAt = createdAt,
+            updatedAt = updatedAt,
         )
+
+    private fun ApprovalRequestDocument.applyResult(
+        command: ApprovalResultCommand,
+    ): ApprovalRequestDocument {
+        var stepUpdated = false
+        val updatedSteps = steps.map { step ->
+            if (step.step == command.step && step.approverId == command.approverId) {
+                stepUpdated = true
+                if (step.status == command.status) step else step.copy(status = command.status)
+            } else {
+                step
+            }
+        }
+
+        if (!stepUpdated) {
+            throw IllegalArgumentException(
+                "Approval step ${command.step} for approver ${command.approverId} not found",
+            )
+        }
+
+        val finalStatus = when (command.status) {
+            ApprovalStatus.APPROVED -> FinalStatus.APPROVED
+            ApprovalStatus.REJECTED -> FinalStatus.REJECTED
+            ApprovalStatus.PENDING -> throw IllegalArgumentException("Status must be approved or rejected")
+        }
+
+        return copy(
+            steps = updatedSteps,
+            finalStatus = finalStatus,
+            updatedAt = Instant.now(),
+        )
+    }
 }
