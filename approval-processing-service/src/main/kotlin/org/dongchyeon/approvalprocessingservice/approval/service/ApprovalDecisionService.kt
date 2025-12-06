@@ -39,6 +39,10 @@ class ApprovalDecisionService(
 
         repository.save(request.copy(steps = updatedSteps))
 
+        if (updatedSteps.none { it.status == ApprovalStatus.PENDING }) {
+            repository.deleteByRequestId(request.requestId)
+        }
+
         val result = ApprovalResultPayload(
             requestId = command.requestId,
             step = step.step,

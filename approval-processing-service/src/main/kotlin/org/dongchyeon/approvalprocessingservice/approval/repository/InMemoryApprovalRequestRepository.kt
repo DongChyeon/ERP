@@ -28,6 +28,7 @@ class InMemoryApprovalRequestRepository {
             }
 
         request.steps
+            .filter { it.status == ApprovalStatus.PENDING }
             .map { it.approverId }
             .toSet()
             .forEach { approverId ->
@@ -51,8 +52,7 @@ class InMemoryApprovalRequestRepository {
             ?.toList()
             ?: emptyList()
 
-    fun deleteById(id: Int) {
-        val requestId = id.toLong()
+    fun deleteByRequestId(requestId: Long) {
         val removed = requestsById.remove(requestId) ?: return
 
         removed.steps
@@ -65,6 +65,10 @@ class InMemoryApprovalRequestRepository {
                     requestsByApprover.remove(approverId)
                 }
             }
+    }
+
+    fun deleteById(id: Int) {
+        deleteByRequestId(id.toLong())
     }
 
     fun clear() {

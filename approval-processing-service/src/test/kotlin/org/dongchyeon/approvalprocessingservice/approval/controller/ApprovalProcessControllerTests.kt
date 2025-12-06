@@ -30,7 +30,7 @@ class ApprovalProcessControllerTests @Autowired constructor(
     }
 
     @Test
-    fun `지정된 결재자의 대기 목록을 반환한다`() {
+    fun `지정된_결재자의_대기_목록을_반환한다`() {
         repository.save(
             ApprovalRequest(
                 requestId = 1,
@@ -69,7 +69,7 @@ class ApprovalProcessControllerTests @Autowired constructor(
     }
 
     @Test
-    fun `지정된 결재자의 대기 중인 요청이 없으면 빈 목록을 반환한다`() {
+    fun `지정된_결재자의_대기_중인_요청이_없으면_빈_목록을_반환한다`() {
         repository.save(
             ApprovalRequest(
                 requestId = 3,
