@@ -136,7 +136,8 @@ class ApprovalRequestService(
         }
 
         if (!stepUpdated) {
-            throw IllegalArgumentException(
+            throw ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
                 "Approval step ${command.step} for approver ${command.approverId} not found",
             )
         }
