@@ -37,10 +37,6 @@ class ApprovalDecisionService(
             }
         }
 
-        if (updatedSteps.none { it.status == ApprovalStatus.PENDING }) {
-            repository.deleteByRequestId(request.requestId)
-        }
-
         val result = ApprovalResultPayload(
             requestId = command.requestId,
             step = step.step,
@@ -50,7 +46,11 @@ class ApprovalDecisionService(
 
         try {
             approvalResultGrpcClient.sendResult(result)
-            repository.save(request.copy(steps = updatedSteps))
+            if (updatedSteps.none { it.status == ApprovalStatus.PENDING }) {
+                repository.deleteByRequestId(request.requestId)
+            } else {
+                repository.save(request.copy(steps = updatedSteps))
+            }
         } catch (ex: StatusRuntimeException) {
             throw ResponseStatusException(
                 HttpStatus.BAD_GATEWAY,
