@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package approval;
+
+service Approval {
+  // 결재 요청 정보를 Approval Processing Service로 전달
+  rpc RequestApproval(ApprovalRequest) returns (ApprovalResponse);
+  // Approval Processing Service로부터 결재 결과를 전달받음
+  rpc ReturnApprovalResult(ApprovalResultRequest) returns (ApprovalResultResponse);
+}
+
+message Step {
+  int32 step = 1;
+  int64 approverId = 2;
+  string status = 3; // pending, approved, rejected
+}
+
+message ApprovalRequest {
+  int64 requestId = 1;
+  int64 requesterId = 2;
+  string title = 3;
+  string content = 4;
+  repeated Step steps = 5;
+}
+
+message ApprovalResponse {
+  string status = 1; // 처리 상태
+}
+
+message ApprovalResultRequest {
+  int64 requestId = 1;
+  int32 step = 2;
+  int64 approverId = 3;
+  string status = 4; // approved or rejected
+}
+
+message ApprovalResultResponse {
+  string status = 1; // 처리 상태
+}

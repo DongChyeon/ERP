@@ -2,9 +2,9 @@ package org.dongchyeon.approvalrequestservice.approval.model
 
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
+import java.time.Instant
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.mapping.Document
-import java.time.Instant
 
 @Document("approval_requests")
 data class ApprovalRequestDocument(
@@ -16,6 +16,7 @@ data class ApprovalRequestDocument(
     val steps: List<ApprovalStep>,
     val finalStatus: FinalStatus,
     val createdAt: Instant,
+    val updatedAt: Instant? = null,
 )
 
 data class ApprovalStep(
