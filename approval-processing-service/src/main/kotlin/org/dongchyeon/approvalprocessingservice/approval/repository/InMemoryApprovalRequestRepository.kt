@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository
 @Repository
 class InMemoryApprovalRequestRepository {
     private val requestsById: MutableMap<Long, ApprovalRequest> = mutableMapOf()
-    private val requestsByApprover: MutableMap<Long, MutableList<ApprovalRequest>> = mutableMapOf()
+    private val requestsByApprover: MutableMap<Long, MutableMap<Long, ApprovalRequest>> = mutableMapOf()
 
     fun save(request: ApprovalRequest): ApprovalRequest = request.also {
         if (request.steps.isEmpty()) {
@@ -21,7 +21,7 @@ class InMemoryApprovalRequestRepository {
             ?.toSet()
             ?.forEach { approverId ->
                 val requestsForApprover = requestsByApprover[approverId] ?: return@forEach
-                requestsForApprover.removeIf { it.requestId == request.requestId }
+                requestsForApprover.remove(request.requestId)
                 if (requestsForApprover.isEmpty()) {
                     requestsByApprover.remove(approverId)
                 }
@@ -31,8 +31,8 @@ class InMemoryApprovalRequestRepository {
             .map { it.approverId }
             .toSet()
             .forEach { approverId ->
-                val requestsForApprover = requestsByApprover.getOrPut(approverId) { mutableListOf() }
-                requestsForApprover.add(request)
+                val requestsForApprover = requestsByApprover.getOrPut(approverId) { mutableMapOf() }
+                requestsForApprover[request.requestId] = request
             }
     }
 
@@ -44,6 +44,7 @@ class InMemoryApprovalRequestRepository {
 
     fun findPendingByApproverId(approverId: Long): List<ApprovalRequest> =
         requestsByApprover[approverId]
+            ?.values
             ?.filter { request ->
                 request.steps.any { it.approverId == approverId && it.status == ApprovalStatus.PENDING }
             }
@@ -59,7 +60,7 @@ class InMemoryApprovalRequestRepository {
             .toSet()
             .forEach { approverId ->
                 val requestsForApprover = requestsByApprover[approverId] ?: return@forEach
-                requestsForApprover.removeIf { it.requestId == requestId }
+                requestsForApprover.remove(requestId)
                 if (requestsForApprover.isEmpty()) {
                     requestsByApprover.remove(approverId)
                 }
