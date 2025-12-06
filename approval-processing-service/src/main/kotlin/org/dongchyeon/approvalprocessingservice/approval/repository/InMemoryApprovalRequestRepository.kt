@@ -3,11 +3,12 @@ package org.dongchyeon.approvalprocessingservice.approval.repository
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalRequest
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
 import org.springframework.stereotype.Repository
+import java.util.concurrent.ConcurrentHashMap
 
 @Repository
 class InMemoryApprovalRequestRepository {
-    private val requestsById: MutableMap<Long, ApprovalRequest> = mutableMapOf()
-    private val requestsByApprover: MutableMap<Long, MutableMap<Long, ApprovalRequest>> = mutableMapOf()
+    private val requestsById: MutableMap<Long, ApprovalRequest> = ConcurrentHashMap()
+    private val requestsByApprover: MutableMap<Long, MutableMap<Long, ApprovalRequest>> = ConcurrentHashMap()
 
     fun save(request: ApprovalRequest): ApprovalRequest = request.also {
         if (request.steps.isEmpty()) {
