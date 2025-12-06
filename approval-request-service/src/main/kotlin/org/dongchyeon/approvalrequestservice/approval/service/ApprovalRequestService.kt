@@ -101,7 +101,12 @@ class ApprovalRequestService(
 
     fun applyApprovalResult(command: ApprovalResultCommand) {
         val document = repository.findById(command.requestId)
-            .orElseThrow { NoSuchElementException("Approval request ${command.requestId} not found") }
+            .orElseThrow {
+                ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Approval request ${command.requestId} not found",
+                )
+            }
         repository.save(document.applyResult(command))
     }
 
