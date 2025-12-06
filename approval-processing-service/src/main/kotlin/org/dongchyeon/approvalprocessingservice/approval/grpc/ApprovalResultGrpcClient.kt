@@ -29,7 +29,9 @@ class ApprovalResultGrpcClient(
             .setApproverId(result.approverId.toInt())
             .setStatus(result.status.value)
             .build()
-        blockingStub.returnApprovalResult(request)
+        blockingStub
+            .withDeadlineAfter(10, TimeUnit.SECONDS)
+            .returnApprovalResult(request)
     }
 
     @PreDestroy
