@@ -107,6 +107,11 @@ class ApprovalRequestService(
                     "Approval request ${command.requestId} not found",
                 )
             }
+        if (command.status == ApprovalStatus.REJECTED) {
+            repository.deleteById(command.requestId)
+            return
+        }
+
         repository.save(document.applyResult(command))
     }
 

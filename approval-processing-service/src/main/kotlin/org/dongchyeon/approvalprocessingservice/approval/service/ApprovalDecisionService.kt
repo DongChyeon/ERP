@@ -46,7 +46,10 @@ class ApprovalDecisionService(
 
         try {
             approvalResultGrpcClient.sendResult(result)
-            if (updatedSteps.none { it.status == ApprovalStatus.PENDING }) {
+            val shouldDelete = command.status == ApprovalStatus.REJECTED ||
+                updatedSteps.none { it.status == ApprovalStatus.PENDING }
+
+            if (shouldDelete) {
                 repository.deleteByRequestId(request.requestId)
             } else {
                 repository.save(request.copy(steps = updatedSteps))
