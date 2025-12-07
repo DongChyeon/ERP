@@ -12,10 +12,18 @@ class WebSocketSessionRegistry {
     private val sessions: MutableMap<Long, WebSocketSession> = ConcurrentHashMap()
 
     fun register(employeeId: Long, session: WebSocketSession) {
-        sessions.put(employeeId, session)?.let { previous ->
-            if (previous.isOpen) {
-                runCatching { previous.close(CloseStatus.NORMAL) }
+        sessions.compute(employeeId) { _, previous ->
+            previous?.let {
+                if (it.isOpen) {
+                    runCatching {
+                        it.close(CloseStatus.NORMAL)
+                        log.info("Closed previous WebSocket session {} for employee {}", it.id, employeeId)
+                    }.onFailure { ex ->
+                        log.warn("Failed to close previous session for employee {}", employeeId, ex)
+                    }
+                }
             }
+            session
         }
         log.info("Registered WebSocket session {} for employee {}", session.id, employeeId)
     }
