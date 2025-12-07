@@ -74,6 +74,7 @@ services:
       APPROVAL_PROCESSING_GRPC_PORT: 9090
       APPROVAL_RESULT_GRPC_PORT: 50052
       EMPLOYEE_SERVICE_URL: http://employee-service:8081
+      NOTIFICATION_SERVICE_URL: http://notification-service:8084
       TOMCAT_BASEDIR: /tmp/approval-request-service/tomcat
       JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=/tmp/approval-request-service/tmp -Dserver.tomcat.basedir=/tmp/approval-request-service/tomcat"
 

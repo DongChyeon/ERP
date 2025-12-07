@@ -15,6 +15,7 @@ import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.FinalStatus
 import org.dongchyeon.approvalrequestservice.approval.repository.ApprovalRequestRepository
 import org.dongchyeon.approvalrequestservice.employee.EmployeeServiceClient
+import org.dongchyeon.approvalrequestservice.notification.NotificationServiceClient
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -25,6 +26,7 @@ class ApprovalRequestService(
     private val sequenceGeneratorService: SequenceGeneratorService,
     private val employeeServiceClient: EmployeeServiceClient,
     private val approvalProcessingGrpcClient: ApprovalProcessingGrpcClient,
+    private val notificationServiceClient: NotificationServiceClient,
 ) {
     fun create(request: CreateApprovalRequest): CreateApprovalResponse {
         validateStepsSequence(request.steps)
@@ -107,12 +109,32 @@ class ApprovalRequestService(
                     "Approval request ${command.requestId} not found",
                 )
             }
-        if (command.status == ApprovalStatus.REJECTED) {
+
+        val updatedDocument = document.applyResult(command)
+
+        if (updatedDocument.finalStatus == FinalStatus.REJECTED) {
+            notifyFinalStatus(updatedDocument)
             repository.deleteById(command.requestId)
             return
         }
 
-        repository.save(document.applyResult(command))
+        repository.save(updatedDocument)
+
+        if (
+            updatedDocument.finalStatus == FinalStatus.APPROVED &&
+            document.finalStatus != FinalStatus.APPROVED
+        ) {
+            notifyFinalStatus(updatedDocument)
+        }
+    }
+
+    private fun notifyFinalStatus(document: ApprovalRequestDocument) {
+        notificationServiceClient.sendFinalStatusNotification(
+            requestId = document.requestId,
+            requesterId = document.requesterId,
+            finalStatus = document.finalStatus,
+            rejectedBy = document.steps.find { it.status == ApprovalStatus.REJECTED }?.approverId,
+        )
     }
 
     private fun ApprovalRequestDocument.toResponse(): ApprovalRequestResponse =
