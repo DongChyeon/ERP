@@ -1,0 +1,125 @@
+# -------------------------------------------------
+# Shared variables
+# -------------------------------------------------
+@employeeServiceHost = http://localhost:8081
+@approvalRequestHost = http://localhost:8082
+@approvalProcessingHost = http://localhost:8083
+
+### Step 1: Create requester (employee who will receive WebSocket notifications)
+POST {{employeeServiceHost}}/employees
+Content-Type: application/json
+
+{
+  "name": "Requester Kim",
+  "department": "Finance",
+  "position": "Manager"
+}
+
+> {% client.global.set("requesterId", response.body.id); %}
+
+### Step 2: Create first approver
+POST {{employeeServiceHost}}/employees
+Content-Type: application/json
+
+{
+  "name": "Approver Lee",
+  "department": "Finance",
+  "position": "Director"
+}
+
+> {% client.global.set("approver1Id", response.body.id); %}
+
+### Step 3: Create second approver
+POST {{employeeServiceHost}}/employees
+Content-Type: application/json
+
+{
+  "name": "Approver Choi",
+  "department": "Finance",
+  "position": "CFO"
+}
+
+> {% client.global.set("approver2Id", response.body.id); %}
+
+# -------------------------------------------------
+# WebSocket setup (run in another terminal)
+# -------------------------------------------------
+# Connect after Step 1 so requester receives events:
+#   websocat ws://localhost:8084/ws?id={{requesterId}}
+# or wscat -c ws://localhost:8084/ws?id={{requesterId}}
+
+# -------------------------------------------------
+# Rejection flow (triggers immediate delete + notification)
+# -------------------------------------------------
+
+### Step 4: Create approval request that will be rejected
+POST {{approvalRequestHost}}/approvals
+Content-Type: application/json
+
+{
+  "requesterId": {{requesterId}},
+  "title": "Conference Travel (Rejection Demo)",
+  "content": "Flights + hotel",
+  "steps": [
+    { "step": 1, "approverId": {{approver1Id}} },
+    { "step": 2, "approverId": {{approver2Id}} }
+  ]
+}
+
+> {% client.global.set("rejectRequestId", response.body.requestId); %}
+
+### Step 5: Approver 1 checks pending requests
+GET {{approvalProcessingHost}}/process/{{approver1Id}}
+Accept: application/json
+
+### Step 6: Approver 1 rejects the request (request removed + WebSocket "REJECTED")
+POST {{approvalProcessingHost}}/process/{{approver1Id}}/{{rejectRequestId}}
+Content-Type: application/json
+
+{
+  "status": "rejected"
+}
+
+### Step 7: Confirm the rejected request no longer exists in Approval Request Service (expect 404)
+GET {{approvalRequestHost}}/approvals/{{rejectRequestId}}
+Accept: application/json
+
+# -------------------------------------------------
+# Approval flow (all steps approved -> final notification)
+# -------------------------------------------------
+
+### Step 8: Create a second approval request for approval path
+POST {{approvalRequestHost}}/approvals
+Content-Type: application/json
+
+{
+  "requesterId": {{requesterId}},
+  "title": "Laptop Purchase (Approval Demo)",
+  "content": "MacBook Pro upgrade",
+  "steps": [
+    { "step": 1, "approverId": {{approver1Id}} },
+    { "step": 2, "approverId": {{approver2Id}} }
+  ]
+}
+
+> {% client.global.set("approvalRequestId", response.body.requestId); %}
+
+### Step 9: First approver approves
+POST {{approvalProcessingHost}}/process/{{approver1Id}}/{{approvalRequestId}}
+Content-Type: application/json
+
+{
+  "status": "approved"
+}
+
+### Step 10: Second approver approves (WebSocket "APPROVED")
+POST {{approvalProcessingHost}}/process/{{approver2Id}}/{{approvalRequestId}}
+Content-Type: application/json
+
+{
+  "status": "approved"
+}
+
+### Step 11: Verify approval request is finalized with APPROVED status
+GET {{approvalRequestHost}}/approvals/{{approvalRequestId}}
+Accept: application/json
