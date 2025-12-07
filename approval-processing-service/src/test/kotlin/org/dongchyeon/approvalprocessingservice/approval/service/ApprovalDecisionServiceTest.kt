@@ -74,7 +74,7 @@ class ApprovalDecisionServiceTest {
             })
         }
         val saved = repository.findByRequestId(REQUEST_ID)
-        assertThat(saved).isNotNull
+        assertThat(saved).isNotNull()
         assertThat(saved!!.steps.first { it.approverId == PRIMARY_APPROVER_ID }.status)
             .isEqualTo(ApprovalStatus.APPROVED)
         assertThat(saved.steps.first { it.approverId == SECONDARY_APPROVER_ID }.status)
