@@ -6,7 +6,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.verify
 import org.assertj.core.api.Assertions.assertThat
-import org.dongchyeon.approvalprocessingservice.approval.grpc.ApprovalResultGrpcClient
+import org.dongchyeon.approvalprocessingservice.approval.messaging.ApprovalResultPublisher
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalDecisionCommand
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalRequest
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
@@ -18,8 +18,8 @@ import org.junit.jupiter.api.Test
 class ApprovalDecisionServiceTest {
 
     private val repository = InMemoryApprovalRequestRepository()
-    private val approvalResultGrpcClient = mockk<ApprovalResultGrpcClient>()
-    private val service = ApprovalDecisionService(repository, approvalResultGrpcClient)
+    private val approvalResultPublisher = mockk<ApprovalResultPublisher>()
+    private val service = ApprovalDecisionService(repository, approvalResultPublisher)
 
     @AfterEach
     fun tearDown() {
@@ -28,7 +28,7 @@ class ApprovalDecisionServiceTest {
 
     @Test
     fun `결재가_반려되면_요청을_삭제한다`() {
-        every { approvalResultGrpcClient.sendResult(any()) } just Runs
+        every { approvalResultPublisher.publish(any()) } just Runs
         repository.save(defaultApprovalRequest())
 
         val command = ApprovalDecisionCommand(
@@ -40,7 +40,7 @@ class ApprovalDecisionServiceTest {
         service.decide(command)
 
         verify(exactly = 1) {
-            approvalResultGrpcClient.sendResult(withArg { payload ->
+            approvalResultPublisher.publish(withArg { payload ->
                 assertThat(payload.requestId).isEqualTo(REQUEST_ID)
                 assertThat(payload.step).isEqualTo(1)
                 assertThat(payload.approverId).isEqualTo(PRIMARY_APPROVER_ID)
@@ -54,7 +54,7 @@ class ApprovalDecisionServiceTest {
 
     @Test
     fun `결재가_승인되어도_다음_결재자가_남아있으면_요청을_유지한다`() {
-        every { approvalResultGrpcClient.sendResult(any()) } just Runs
+        every { approvalResultPublisher.publish(any()) } just Runs
         repository.save(defaultApprovalRequest())
 
         val command = ApprovalDecisionCommand(
@@ -66,7 +66,7 @@ class ApprovalDecisionServiceTest {
         service.decide(command)
 
         verify(exactly = 1) {
-            approvalResultGrpcClient.sendResult(withArg { payload ->
+            approvalResultPublisher.publish(withArg { payload ->
                 assertThat(payload.requestId).isEqualTo(REQUEST_ID)
                 assertThat(payload.step).isEqualTo(1)
                 assertThat(payload.approverId).isEqualTo(PRIMARY_APPROVER_ID)

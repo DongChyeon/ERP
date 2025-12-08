@@ -1,9 +1,8 @@
 package org.dongchyeon.approvalrequestservice.approval.service
 
-import io.grpc.StatusRuntimeException
 import java.time.Instant
 import org.dongchyeon.approvalrequestservice.approval.common.SequenceGeneratorService
-import org.dongchyeon.approvalrequestservice.approval.grpc.ApprovalProcessingGrpcClient
+import org.dongchyeon.approvalrequestservice.approval.messaging.ApprovalRequestPublisher
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestDocument
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestResponse
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalResultCommand
@@ -16,6 +15,7 @@ import org.dongchyeon.approvalrequestservice.approval.model.FinalStatus
 import org.dongchyeon.approvalrequestservice.approval.repository.ApprovalRequestRepository
 import org.dongchyeon.approvalrequestservice.employee.EmployeeServiceClient
 import org.dongchyeon.approvalrequestservice.notification.NotificationServiceClient
+import org.springframework.amqp.AmqpException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -25,7 +25,7 @@ class ApprovalRequestService(
     private val repository: ApprovalRequestRepository,
     private val sequenceGeneratorService: SequenceGeneratorService,
     private val employeeServiceClient: EmployeeServiceClient,
-    private val approvalProcessingGrpcClient: ApprovalProcessingGrpcClient,
+    private val approvalRequestPublisher: ApprovalRequestPublisher,
     private val notificationServiceClient: NotificationServiceClient,
 ) {
     fun create(request: CreateApprovalRequest): CreateApprovalResponse {
@@ -59,8 +59,8 @@ class ApprovalRequestService(
 
     private fun sendToProcessing(document: ApprovalRequestDocument) {
         try {
-            approvalProcessingGrpcClient.forward(document)
-        } catch (ex: StatusRuntimeException) {
+            approvalRequestPublisher.publish(document)
+        } catch (ex: AmqpException) {
             throw ResponseStatusException(
                 HttpStatus.SERVICE_UNAVAILABLE,
                 "Approval Processing Service unavailable",

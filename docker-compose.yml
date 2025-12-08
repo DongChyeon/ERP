@@ -29,7 +29,24 @@ services:
       - mongo-data:/data/db
 
   # -----------------------
-  # 3) Employee Service
+  # 3) RabbitMQ
+  # -----------------------
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # -----------------------
+  # 4) Employee Service
   # -----------------------
   employee-service:
     build:
@@ -51,7 +68,7 @@ services:
       DB_PASSWORD: root
 
   # -----------------------
-  # 4) Approval Request Service
+  # 5) Approval Request Service
   # -----------------------
   approval-request-service:
     build:
@@ -59,45 +76,47 @@ services:
       dockerfile: Dockerfile
     container_name: approval-request-service
     depends_on:
-      - mongo
-      - employee-service
-      - approval-processing-service
+      mongo:
+        condition: service_started
+      employee-service:
+        condition: service_started
+      approval-processing-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8082:8082"
-      - "50052:50052"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8082
       MONGODB_URI: mongodb://mongo:27017/erp
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/erp
-      APPROVAL_PROCESSING_GRPC_HOST: approval-processing-service
-      APPROVAL_PROCESSING_GRPC_PORT: 9090
-      APPROVAL_RESULT_GRPC_PORT: 50052
+      RABBITMQ_HOST: rabbitmq
       EMPLOYEE_SERVICE_URL: http://employee-service:8081
       NOTIFICATION_SERVICE_URL: http://notification-service:8084
       TOMCAT_BASEDIR: /tmp/approval-request-service/tomcat
       JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=/tmp/approval-request-service/tmp -Dserver.tomcat.basedir=/tmp/approval-request-service/tomcat"
 
   # -----------------------
-  # 5) Approval Processing Service
+  # 6) Approval Processing Service
   # -----------------------
   approval-processing-service:
     build:
       context: ./approval-processing-service
       dockerfile: Dockerfile
     container_name: approval-processing-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "8083:8083"
-      - "9090:9090"  # gRPC 서버 포트
     environment:
       SPRING_PROFILES_ACTIVE: docker
       SERVER_PORT: 8083
-      APPROVAL_GRPC_PORT: 9090
-      APPROVAL_RESULT_GRPC_HOST: approval-request-service
-      APPROVAL_RESULT_GRPC_PORT: 50052
+      RABBITMQ_HOST: rabbitmq
 
   # -----------------------
-  # 6) Notification Service
+  # 7) Notification Service
   # -----------------------
   notification-service:
     build:

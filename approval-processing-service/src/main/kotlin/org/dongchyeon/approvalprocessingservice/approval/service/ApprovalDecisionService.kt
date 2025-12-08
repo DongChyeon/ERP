@@ -1,11 +1,11 @@
 package org.dongchyeon.approvalprocessingservice.approval.service
 
-import io.grpc.StatusRuntimeException
-import org.dongchyeon.approvalprocessingservice.approval.grpc.ApprovalResultGrpcClient
+import org.dongchyeon.approvalprocessingservice.approval.messaging.ApprovalResultPublisher
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalDecisionCommand
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalResultPayload
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.repository.InMemoryApprovalRequestRepository
+import org.springframework.amqp.AmqpException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.server.ResponseStatusException
@@ -13,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException
 @Service
 class ApprovalDecisionService(
     private val repository: InMemoryApprovalRequestRepository,
-    private val approvalResultGrpcClient: ApprovalResultGrpcClient,
+    private val approvalResultPublisher: ApprovalResultPublisher,
 ) {
 
     fun decide(command: ApprovalDecisionCommand) {
@@ -45,7 +45,7 @@ class ApprovalDecisionService(
         )
 
         try {
-            approvalResultGrpcClient.sendResult(result)
+            approvalResultPublisher.publish(result)
             val shouldDelete = command.status == ApprovalStatus.REJECTED ||
                 updatedSteps.none { it.status == ApprovalStatus.PENDING }
 
@@ -54,7 +54,7 @@ class ApprovalDecisionService(
             } else {
                 repository.save(request.copy(steps = updatedSteps))
             }
-        } catch (ex: StatusRuntimeException) {
+        } catch (ex: AmqpException) {
             throw ResponseStatusException(
                 HttpStatus.BAD_GATEWAY,
                 "Failed to notify approval request service",
