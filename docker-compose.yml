@@ -87,8 +87,6 @@ services:
         condition: service_started
       employee-service:
         condition: service_started
-      approval-processing-service:
-        condition: service_started
       rabbitmq:
         condition: service_healthy
     ports:
