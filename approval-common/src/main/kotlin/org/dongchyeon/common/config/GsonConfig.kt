@@ -2,6 +2,7 @@ package org.dongchyeon.common.config
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonSyntaxException
 import com.google.gson.TypeAdapter
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
@@ -30,9 +31,14 @@ open class GsonConfig {
                     override fun read(`in`: JsonReader): ApprovalStatus {
                         if (`in`.peek() == JsonToken.NULL) {
                             `in`.nextNull()
-                            return ApprovalStatus.PENDING
+                            throw JsonSyntaxException("Approval status must not be null")
                         }
-                        return ApprovalStatus.from(`in`.nextString())
+                        val raw = `in`.nextString()
+                        return try {
+                            ApprovalStatus.from(raw)
+                        } catch (ex: IllegalArgumentException) {
+                            throw JsonSyntaxException("Unknown approval status: $raw", ex)
+                        }
                     }
                 },
             )
