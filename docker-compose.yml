@@ -35,9 +35,14 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     restart: always
+    env_file:
+      - ./env/secrets
     ports:
       - "5672:5672"
       - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD}
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "check_running"]
       interval: 10s
@@ -75,6 +80,8 @@ services:
       context: ./approval-request-service
       dockerfile: Dockerfile
     container_name: approval-request-service
+    env_file:
+      - ./env/secrets
     depends_on:
       mongo:
         condition: service_started
@@ -105,6 +112,8 @@ services:
       context: ./approval-processing-service
       dockerfile: Dockerfile
     container_name: approval-processing-service
+    env_file:
+      - ./env/secrets
     depends_on:
       rabbitmq:
         condition: service_healthy
