@@ -1,0 +1,39 @@
+package org.dongchyeon.common.messaging
+
+import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonValue
+
+enum class ApprovalStatus(@get:JsonValue val value: String) {
+    PENDING("pending"),
+    APPROVED("approved"),
+    REJECTED("rejected");
+
+    companion object {
+        @JvmStatic
+        @JsonCreator
+        fun from(value: String): ApprovalStatus =
+            entries.firstOrNull { it.value == value.lowercase() }
+                ?: throw IllegalArgumentException("Unknown approval status: $value")
+    }
+}
+
+data class ApprovalRequestMessage(
+    val requestId: Long,
+    val requesterId: Long,
+    val title: String,
+    val content: String,
+    val steps: List<ApprovalRequestStepMessage>,
+)
+
+data class ApprovalRequestStepMessage(
+    val step: Int,
+    val approverId: Long,
+    val status: ApprovalStatus,
+)
+
+data class ApprovalResultMessage(
+    val requestId: Long,
+    val step: Int,
+    val approverId: Long,
+    val status: ApprovalStatus,
+)

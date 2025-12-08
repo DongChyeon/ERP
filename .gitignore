@@ -55,6 +55,7 @@ temp/
 ###############
 # Node (혹시 프런트 or WebSocket 테스트)
 ###############
+.env
 node_modules/
 dist/
 npm-debug.log

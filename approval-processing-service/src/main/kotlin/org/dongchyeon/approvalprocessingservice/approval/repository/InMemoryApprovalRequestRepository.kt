@@ -1,7 +1,7 @@
 package org.dongchyeon.approvalprocessingservice.approval.repository
 
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalRequest
-import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.springframework.stereotype.Repository
 import java.util.concurrent.ConcurrentHashMap
 

@@ -2,8 +2,8 @@ package org.dongchyeon.approvalprocessingservice.approval.repository
 
 import org.assertj.core.api.Assertions.assertThat
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalRequest
-import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStep
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.junit.jupiter.api.Test
 
 class InMemoryApprovalRequestRepositoryTest {
