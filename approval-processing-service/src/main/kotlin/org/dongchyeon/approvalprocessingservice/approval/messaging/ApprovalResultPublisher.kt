@@ -2,6 +2,7 @@ package org.dongchyeon.approvalprocessingservice.approval.messaging
 
 import com.google.gson.Gson
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalResultPayload
+import org.dongchyeon.common.messaging.ApprovalResultMessage
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Component

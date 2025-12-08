@@ -1,11 +1,12 @@
 package org.dongchyeon.approvalrequestservice.approval.messaging
 
 import com.google.gson.Gson
-import org.dongchyeon.approvalrequestservice.approval.model.ApprovalResultCommand
 import org.dongchyeon.approvalrequestservice.approval.service.ApprovalRequestService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Component
+import org.dongchyeon.common.messaging.ApprovalResultMessage
+import org.dongchyeon.approvalrequestservice.approval.model.ApprovalResultCommand
 
 @Component
 class ApprovalResultListener(

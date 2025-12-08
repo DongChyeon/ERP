@@ -1,7 +1,7 @@
 package org.dongchyeon.approvalprocessingservice.approval.controller
 
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalRequest
-import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStep
 import org.dongchyeon.approvalprocessingservice.approval.repository.InMemoryApprovalRequestRepository
 import org.junit.jupiter.api.BeforeEach

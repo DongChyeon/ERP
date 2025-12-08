@@ -7,7 +7,7 @@ import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestDocum
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalRequestResponse
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalResultCommand
 import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStep
-import org.dongchyeon.approvalrequestservice.approval.model.ApprovalStatus
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalRequest
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalResponse
 import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalStep

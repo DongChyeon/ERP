@@ -1,6 +1,7 @@
 package org.dongchyeon.approvalprocessingservice.approval.model
 
 import jakarta.validation.constraints.NotBlank
+import org.dongchyeon.common.messaging.ApprovalStatus
 
 data class ProcessApprovalResultRequest(
     @field:NotBlank

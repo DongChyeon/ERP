@@ -3,7 +3,7 @@ package org.dongchyeon.approvalprocessingservice.approval.service
 import org.dongchyeon.approvalprocessingservice.approval.messaging.ApprovalResultPublisher
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalDecisionCommand
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalResultPayload
-import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.repository.InMemoryApprovalRequestRepository
 import org.springframework.amqp.AmqpException
 import org.springframework.http.HttpStatus

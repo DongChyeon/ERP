@@ -2,7 +2,7 @@ package org.dongchyeon.approvalprocessingservice.approval.controller
 
 import jakarta.validation.Valid
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalDecisionCommand
-import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalStatus
+import org.dongchyeon.common.messaging.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.model.ProcessApprovalResultRequest
 import org.dongchyeon.approvalprocessingservice.approval.model.ProcessApprovalResultResponse
 import org.dongchyeon.approvalprocessingservice.approval.service.ApprovalDecisionService

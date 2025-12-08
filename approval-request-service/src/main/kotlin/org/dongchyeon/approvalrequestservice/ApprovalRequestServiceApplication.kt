@@ -9,8 +9,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
+import org.dongchyeon.common.config.GsonConfig
 
 @SpringBootApplication
+@Import(GsonConfig::class)
 class ApprovalRequestServiceApplication {
 
     private val log = LoggerFactory.getLogger(ApprovalRequestServiceApplication::class.java)
