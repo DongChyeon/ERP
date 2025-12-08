@@ -1,8 +1,10 @@
 package org.dongchyeon.approvalrequestservice.approval.messaging
 
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import org.dongchyeon.approvalrequestservice.approval.service.ApprovalRequestService
 import org.slf4j.LoggerFactory
+import org.springframework.amqp.AmqpRejectAndDontRequeueException
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.stereotype.Component
 import org.dongchyeon.common.messaging.ApprovalResultMessage
@@ -18,7 +20,12 @@ class ApprovalResultListener(
 
     @RabbitListener(queues = ["\${approval.messaging.result.queue}"])
     fun handle(payload: String) {
-        val message = gson.fromJson(payload, ApprovalResultMessage::class.java)
+        val message = try {
+            gson.fromJson(payload, ApprovalResultMessage::class.java)
+        } catch (ex: JsonSyntaxException) {
+            log.error("Failed to parse approval result payload: {}", payload, ex)
+            throw AmqpRejectAndDontRequeueException("Invalid approval result message", ex)
+        }
         log.debug(
             "Received approval result for request {}, step {}, approver {}",
             message.requestId,
