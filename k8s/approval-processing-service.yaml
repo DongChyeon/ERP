@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-processing-service
+  labels:
+    app: approval-processing-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: approval-processing-service
+  template:
+    metadata:
+      labels:
+        app: approval-processing-service
+    spec:
+      containers:
+        - name: approval-processing-service
+          image: registry.local/approval/approval-processing-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kubernetes
+            - name: SERVER_PORT
+              value: "8083"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: password
+            - name: APPROVAL_REQUEST_QUEUE
+              value: approval.requests.queue
+            - name: APPROVAL_REQUEST_EXCHANGE
+              value: approval.requests.exchange
+            - name: APPROVAL_REQUEST_ROUTING_KEY
+              value: approval.requests
+            - name: APPROVAL_RESULT_QUEUE
+              value: approval.results.queue
+            - name: APPROVAL_RESULT_EXCHANGE
+              value: approval.results.exchange
+            - name: APPROVAL_RESULT_ROUTING_KEY
+              value: approval.results
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8083
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 400m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: approval-processing-service
+  labels:
+    app: approval-processing-service
+spec:
+  selector:
+    app: approval-processing-service
+  ports:
+    - port: 8083
+      targetPort: 8083
+      protocol: TCP
+  type: ClusterIP

@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: approval-request-service
+  labels:
+    app: approval-request-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: approval-request-service
+  template:
+    metadata:
+      labels:
+        app: approval-request-service
+    spec:
+      containers:
+        - name: approval-request-service
+          image: registry.local/approval/approval-request-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8082
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: kubernetes
+            - name: SERVER_PORT
+              value: "8082"
+            - name: MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: uri
+            - name: SPRING_DATA_MONGODB_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-credentials
+                  key: uri
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: password
+            - name: EMPLOYEE_SERVICE_URL
+              value: http://employee-service:8081
+            - name: NOTIFICATION_SERVICE_URL
+              value: http://notification-service:8084
+            - name: APPROVAL_REQUEST_QUEUE
+              value: approval.requests.queue
+            - name: APPROVAL_REQUEST_EXCHANGE
+              value: approval.requests.exchange
+            - name: APPROVAL_REQUEST_ROUTING_KEY
+              value: approval.requests
+            - name: APPROVAL_RESULT_QUEUE
+              value: approval.results.queue
+            - name: APPROVAL_RESULT_EXCHANGE
+              value: approval.results.exchange
+            - name: APPROVAL_RESULT_ROUTING_KEY
+              value: approval.results
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8082
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+          resources:
+            requests:
+              cpu: 150m
+              memory: 256Mi
+            limits:
+              cpu: 600m
+              memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: approval-request-service
+  labels:
+    app: approval-request-service
+spec:
+  selector:
+    app: approval-request-service
+  ports:
+    - port: 8082
+      targetPort: 8082
+      protocol: TCP
+  type: ClusterIP
