@@ -50,7 +50,7 @@ if [ -f "$ENV_FILE" ]; then
     --from-literal=password="${DB_PASSWORD:-root}" \
     --dry-run=client -o yaml | kubectl apply -f -
   kubectl create secret generic mongo-credentials \
-    --from-literal=uri="${MONGODB_URI:-mongodb://mongo:27017/erp}" \
+    --from-literal=uri="${MONGODB_URI:-mongodb://mongodb:27017/erp}" \
     --dry-run=client -o yaml | kubectl apply -f -
   kubectl create secret generic rabbitmq-credentials \
     --from-literal=username="${RABBITMQ_USERNAME:-guest}" \
