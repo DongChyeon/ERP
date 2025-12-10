@@ -25,6 +25,20 @@ spec:
               value: kubernetes
             - name: SERVER_PORT
               value: "8084"
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: username
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: rabbitmq-credentials
+                  key: password
           readinessProbe:
             httpGet:
               path: /actuator/health/liveness
