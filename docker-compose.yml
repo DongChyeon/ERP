@@ -129,6 +129,8 @@ services:
       context: ./notification-service
       dockerfile: Dockerfile
     container_name: notification-service
+    env_file:
+      - ./env/secrets
     ports:
       - "8084:8084"
     environment:
