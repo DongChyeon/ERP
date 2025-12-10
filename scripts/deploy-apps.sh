@@ -1,12 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+cd "$REPO_ROOT"
+
 KUBECONFIG_PATH="${KUBECONFIG:-$HOME/.kube/erp-cluster}"
 NAMESPACE="${1:-approval}"
 DEFAULT_REGISTRY="${REGISTRY:-registry.local/approval}"
 REGISTRY_ARG="${2:-}"
 REGISTRY="${REGISTRY_ARG:-$DEFAULT_REGISTRY}"
-MANIFEST_DIR="${MANIFEST_DIR:-k8s}"
+DEFAULT_MANIFEST_DIR="$REPO_ROOT/k8s"
+MANIFEST_DIR="${MANIFEST_DIR:-$DEFAULT_MANIFEST_DIR}"
+if [[ "$MANIFEST_DIR" != /* ]]; then
+  MANIFEST_DIR="$REPO_ROOT/$MANIFEST_DIR"
+fi
 IMAGE_TAG="${IMAGE_TAG:-latest}"
 BUILD_IMAGES="${BUILD_IMAGES:-true}"
 PUSH_IMAGES="${PUSH_IMAGES:-true}"

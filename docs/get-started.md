@@ -69,7 +69,7 @@ ENV_FILE=env/secrets ../scripts/bootstrap-cluster.sh approval
 ### 5.3 데이터스토어(StatefulSet) 배포
 
 ```bash
-ENV_FILE=env/secrets MANIFEST_DIR=../k8s/datastores ../scripts/deploy-datastores.sh approval
+ENV_FILE=env/secrets ../scripts/deploy-datastores.sh approval
 ```
 
 `k8s/datastores/` 아래 정의된 공식 이미지 기반 StatefulSet(MySQL/MongoDB/RabbitMQ)을 적용합니다. `DB_USERNAME`/`DB_PASSWORD`는 일반 사용자 전용이므로 root를 쓰지 마세요. `kubectl get pods -n approval`로 모든 Pod가 `Running`인지 확인하세요. MySQL 스키마는 Docker Compose 환경의 `../scripts/init_mysql.sql`과 Kubernetes의 `k8s/datastores/mysql.yaml`에 포함된 `mysql-schema` ConfigMap에 동시에 정의되어 있으므로, 테이블 구조를 수정할 땐 두 곳을 함께 업데이트한 뒤 Pod를 재시작하거나 PVC를 초기화해 주세요.
@@ -114,7 +114,7 @@ EOF
 
 ```bash
 # 두 번째 인자로 레지스트리 경로를 직접 넘길 수도 있습니다. (예: 10.0.10.189:5000/approval) (아래 `<REGISTRY/PATH>에 채워주세요)
-DOCKER_DEFAULT_PLATFORM=linux/amd64 IMAGE_TAG=$(date +%Y%m%d%H%M%S) MANIFEST_DIR=../k8s ../scripts/deploy-apps.sh <REGISTRY/PATH>
+DOCKER_DEFAULT_PLATFORM=linux/amd64 IMAGE_TAG=$(date +%Y%m%d%H%M%S) ../scripts/deploy-apps.sh 10.0.10.189:5000/approval
 ```
 
 이 명령은 `k8s/kustomization.yaml`을 기반으로 Deployments, Services, Ingress를 모두 적용하고, 지정한 이미지 태그로 각 Deployment를 업데이트합니다. `BUILD_IMAGES=false` 또는 `PUSH_IMAGES=false`로 지정하면 해당 단계를 건너뛰고 `kubectl` 적용만 수행합니다. 배포 후엔 다음 명령으로 상태를 확인하세요.

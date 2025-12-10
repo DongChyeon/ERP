@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/.." && pwd)
+cd "$REPO_ROOT"
+
 KUBECONFIG_PATH="${KUBECONFIG:-$HOME/.kube/erp-cluster}"
 NAMESPACE="${1:-approval}"
-MANIFEST_DIR="${MANIFEST_DIR:-k8s/datastores}"
+DEFAULT_MANIFEST_DIR="$REPO_ROOT/k8s/datastores"
+MANIFEST_DIR="${MANIFEST_DIR:-$DEFAULT_MANIFEST_DIR}"
+if [[ "$MANIFEST_DIR" != /* ]]; then
+  MANIFEST_DIR="$REPO_ROOT/$MANIFEST_DIR"
+fi
 ENV_FILE="${ENV_FILE:-env/secrets}"
 
 if [ ! -f "$KUBECONFIG_PATH" ]; then
