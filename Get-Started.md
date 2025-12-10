@@ -71,7 +71,7 @@ ENV_FILE=env/secrets ./scripts/bootstrap-cluster.sh approval
 ENV_FILE=env/secrets ./scripts/deploy-datastores.sh approval
 ```
 
-`k8s/datastores/` 아래 정의된 공식 이미지 기반 StatefulSet(MySQL/MongoDB/RabbitMQ)을 적용합니다. `DB_USERNAME`/`DB_PASSWORD`는 일반 사용자 전용이므로 root를 쓰지 마세요. `kubectl get pods -n approval`로 모든 Pod가 `Running`인지 확인하세요. 데이터 스키마를 수정하려면 `scripts/init_mysql.sql`을 편집한 뒤 MySQL Pod에서 직접 실행하거나, PVC를 초기화한 상태에서 재배포하면 됩니다.
+`k8s/datastores/` 아래 정의된 공식 이미지 기반 StatefulSet(MySQL/MongoDB/RabbitMQ)을 적용합니다. `DB_USERNAME`/`DB_PASSWORD`는 일반 사용자 전용이므로 root를 쓰지 마세요. `kubectl get pods -n approval`로 모든 Pod가 `Running`인지 확인하세요. MySQL 스키마는 Docker Compose 환경의 `scripts/init_mysql.sql`과 Kubernetes의 `k8s/datastores/mysql.yaml`에 포함된 `mysql-schema` ConfigMap에 동시에 정의되어 있으므로, 테이블 구조를 수정할 땐 두 곳을 함께 업데이트한 뒤 Pod를 재시작하거나 PVC를 초기화해 주세요.
 
 ### 5.4 Ingress / MetalLB
 
@@ -104,7 +104,7 @@ MetalLB가 할당한 IP는 `kubectl get svc -n ingress-nginx`로 확인할 수 �
 
 ```bash
 # 두 번째 인자로 레지스트리 경로를 직접 넘길 수도 있습니다. (예: 10.0.10.189:5000/approval) (아래 `<REGISTRY/PATH>에 채워주세요)
-DOCKER_DEFAULT_PLATFORM=linux/amd64 IMAGE_TAG=$(date +%Y%m%d%H%M%S) MANIFEST_DIR=k8s ./scripts/deploy-apps.sh approval <REGISTRY/PATH>
+DOCKER_DEFAULT_PLATFORM=linux/amd64 IMAGE_TAG=$(date +%Y%m%d%H%M%S) MANIFEST_DIR=k8s ./scripts/deploy-apps.sh approval 10.0.10.189:5000/approval
 ```
 
 이 명령은 `k8s/kustomization.yaml`을 기반으로 Deployments, Services, Ingress를 모두 적용하고, 지정한 이미지 태그로 각 Deployment를 업데이트합니다. `BUILD_IMAGES=false` 또는 `PUSH_IMAGES=false`로 지정하면 해당 단계를 건너뛰고 `kubectl` 적용만 수행합니다. 배포 후엔 다음 명령으로 상태를 확인하세요.
@@ -121,6 +121,6 @@ kubectl get ingress -n approval
 
 - 새로 온 개발자는 `Get-Started.md`의 순서를 그대로 따라 하면 로컬 Compose 또는 Kubernetes 환경까지 완성할 수 있습니다.
 - CI/CD를 구성할 때는 `env/secrets` 값을 GitHub Secrets에 매핑하고, 빌드된 이미지를 `registry.local/...` 대신 여러분이 접근 가능한 Registry 경로로 푸시한 뒤 `k8s/*.yaml`을 업데이트하세요.
-- 데이터베이스 스키마를 변경할 때는 `scripts/init_mysql.sql`을 버전 관리하며, 반드시 개발/테스트 환경에서 먼저 검증하십시오.
+- 데이터베이스 스키마를 변경할 때는 `scripts/init_mysql.sql`과 `k8s/datastores/mysql.yaml` 내 ConfigMap을 함께 수정해 Docker Compose/Kubernetes 환경이 동일한 구조를 유지하도록 하고, 반드시 개발/테스트 환경에서 먼저 검증하십시오.
 
 필요한 경우 이 문서를 팀 Wiki로 옮기고, 학교 클라우드/네트워크 정책 변화에 따라 VPN·LoadBalancer 설정 단계를 갱신해 주세요.
