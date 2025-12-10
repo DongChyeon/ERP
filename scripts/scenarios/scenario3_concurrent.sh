@@ -3,12 +3,13 @@ set -euo pipefail
 SCRIPT_DIR=$(cd $(dirname "$0") && pwd)
 source "$SCRIPT_DIR/common.sh"
 ensure_setup
-request_id=$(create_approval "Concurrent Demo" "Simultaneous approvals")
+request_id=$(create_approval "Concurrent Demo" "Same approver different states")
 echo "Created approval ID: $request_id"
-approve_request "$APPROVER1_ID" "$request_id" "approved" &
-approve_request "$APPROVER2_ID" "$request_id" "approved" &
+
+echo "Approver1 sends approved and rejected nearly simultaneously"
+(approve_request "$APPROVER1_ID" "$request_id" "approved" | jq) &
+(approve_request "$APPROVER1_ID" "$request_id" "rejected" | jq) &
 wait
-echo "Duplicate submit from approver2 (should be idempotent)"
-approve_request "$APPROVER2_ID" "$request_id" "approved" || true
-echo "Final status after concurrent approvals:"
+
+echo "Final status after conflicting submissions:"
 curl -sS "$APPROVAL_REQ_HOST/approvals/$request_id" | jq
