@@ -98,7 +98,6 @@ services:
       SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/erp
       RABBITMQ_HOST: rabbitmq
       EMPLOYEE_SERVICE_URL: http://employee-service:8081
-      NOTIFICATION_SERVICE_URL: http://notification-service:8084
       TOMCAT_BASEDIR: /tmp/approval-request-service/tomcat
       JAVA_TOOL_OPTIONS: "-Djava.io.tmpdir=/tmp/approval-request-service/tmp -Dserver.tomcat.basedir=/tmp/approval-request-service/tomcat"
 
@@ -130,10 +129,16 @@ services:
       context: ./notification-service
       dockerfile: Dockerfile
     container_name: notification-service
+    env_file:
+      - ./env/secrets
     ports:
       - "8084:8084"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
 
 # -----------------------
 # Volumes (DB 데이터 유지)

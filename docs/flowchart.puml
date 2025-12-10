@@ -1,0 +1,34 @@
+@startuml
+title ERP 서비스 흐름도 (프로토콜)
+
+  skinparam defaultTextAlignment center
+  skinparam componentStyle rectangle
+  skinparam component {
+    BackgroundColor #F4F7FF
+    BorderColor #1F4B99
+  }
+
+  actor "Employee / Approver\nClient" as Client
+
+  component "employee-service\n:8081" as EmployeeSvc
+  component "approval-request-service\n:8082" as ApprovalSvc
+  component "approval-processing-service\n:8083" as ProcessingSvc
+  component "notification-service\n:8084" as NotificationSvc
+  component "RabbitMQ\n(approval.requests / approval.results / notification.final)" as RabbitMQ
+  component "WebSocket Session\n(notification-service /ws)" as WebSocket
+
+  Client --> ApprovalSvc : REST\nPOST /approvals
+  ApprovalSvc --> EmployeeSvc : REST\nGET /employees/{id}\n(유저 검증)
+  ApprovalSvc --> RabbitMQ : AMQP\nApprovalRequestMessage 발행
+  RabbitMQ --> ProcessingSvc : AMQP\napproval.requests 소비
+
+  Client --> ProcessingSvc : REST\nGET /process/{approverId}
+  Client --> ProcessingSvc : REST\nPOST /process/{approverId}/{requestId}
+  ProcessingSvc --> RabbitMQ : AMQP\nApprovalResultMessage 발행
+  RabbitMQ --> ApprovalSvc : AMQP\napproval.results 소비
+
+  ApprovalSvc --> RabbitMQ : AMQP\n최종 상태 이벤트 발행
+  RabbitMQ --> NotificationSvc : AMQP\nnotification.final 소비
+  NotificationSvc --> WebSocket : 내부 메시지\n세션 전달
+  WebSocket --> Client : WebSocket\n최종 승인 결과 실시간 전송
+@enduml

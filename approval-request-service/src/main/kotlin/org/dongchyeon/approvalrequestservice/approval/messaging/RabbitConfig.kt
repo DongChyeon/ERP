@@ -1,5 +1,6 @@
 package org.dongchyeon.approvalrequestservice.approval.messaging
 
+import org.dongchyeon.approvalrequestservice.notification.NotificationMessagingProperties
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.Declarables
@@ -14,56 +15,79 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 @EnableRabbit
-@EnableConfigurationProperties(ApprovalMessagingProperties::class)
+@EnableConfigurationProperties(value = [ApprovalMessagingProperties::class, NotificationMessagingProperties::class])
 class RabbitConfig(
-    private val properties: ApprovalMessagingProperties,
+    private val approvalProperties: ApprovalMessagingProperties,
+    private val notificationProperties: NotificationMessagingProperties,
 ) {
 
     @Bean
     fun approvalMessagingDeclarables(): Declarables {
-        val requestExchange = TopicExchange(properties.requestExchange, true, false)
+        val requestExchange = TopicExchange(approvalProperties.requestExchange, true, false)
         val requestQueue = Queue(
-            properties.requestQueue,
+            approvalProperties.requestQueue,
             true,
             false,
             false,
             mapOf(
-                "x-dead-letter-exchange" to dlxName(properties.requestExchange),
-                "x-dead-letter-routing-key" to dlqRoutingKey(properties.requestRoutingKey),
+                "x-dead-letter-exchange" to dlxName(approvalProperties.requestExchange),
+                "x-dead-letter-routing-key" to dlqRoutingKey(approvalProperties.requestRoutingKey),
             ),
         )
         val requestBinding = BindingBuilder
             .bind(requestQueue)
             .to(requestExchange)
-            .with(properties.requestRoutingKey)
-        val requestDlx = TopicExchange(dlxName(properties.requestExchange), true, false)
-        val requestDlq = Queue(dlqName(properties.requestQueue), true)
+            .with(approvalProperties.requestRoutingKey)
+        val requestDlx = TopicExchange(dlxName(approvalProperties.requestExchange), true, false)
+        val requestDlq = Queue(dlqName(approvalProperties.requestQueue), true)
         val requestDlqBinding = BindingBuilder
             .bind(requestDlq)
             .to(requestDlx)
-            .with(dlqRoutingKey(properties.requestRoutingKey))
+            .with(dlqRoutingKey(approvalProperties.requestRoutingKey))
 
-        val resultExchange = TopicExchange(properties.resultExchange, true, false)
+        val resultExchange = TopicExchange(approvalProperties.resultExchange, true, false)
         val resultQueue = Queue(
-            properties.resultQueue,
+            approvalProperties.resultQueue,
             true,
             false,
             false,
             mapOf(
-                "x-dead-letter-exchange" to dlxName(properties.resultExchange),
-                "x-dead-letter-routing-key" to dlqRoutingKey(properties.resultRoutingKey),
+                "x-dead-letter-exchange" to dlxName(approvalProperties.resultExchange),
+                "x-dead-letter-routing-key" to dlqRoutingKey(approvalProperties.resultRoutingKey),
             ),
         )
         val resultBinding = BindingBuilder
             .bind(resultQueue)
             .to(resultExchange)
-            .with(properties.resultRoutingKey)
-        val resultDlx = TopicExchange(dlxName(properties.resultExchange), true, false)
-        val resultDlq = Queue(dlqName(properties.resultQueue), true)
+            .with(approvalProperties.resultRoutingKey)
+        val resultDlx = TopicExchange(dlxName(approvalProperties.resultExchange), true, false)
+        val resultDlq = Queue(dlqName(approvalProperties.resultQueue), true)
         val resultDlqBinding = BindingBuilder
             .bind(resultDlq)
             .to(resultDlx)
-            .with(dlqRoutingKey(properties.resultRoutingKey))
+            .with(dlqRoutingKey(approvalProperties.resultRoutingKey))
+
+        val notificationExchange = TopicExchange(notificationProperties.exchange, true, false)
+        val notificationQueue = Queue(
+            notificationProperties.queue,
+            true,
+            false,
+            false,
+            mapOf(
+                "x-dead-letter-exchange" to dlxName(notificationProperties.exchange),
+                "x-dead-letter-routing-key" to dlqRoutingKey(notificationProperties.routingKey),
+            ),
+        )
+        val notificationBinding = BindingBuilder
+            .bind(notificationQueue)
+            .to(notificationExchange)
+            .with(notificationProperties.routingKey)
+        val notificationDlx = TopicExchange(dlxName(notificationProperties.exchange), true, false)
+        val notificationDlq = Queue(dlqName(notificationProperties.queue), true)
+        val notificationDlqBinding = BindingBuilder
+            .bind(notificationDlq)
+            .to(notificationDlx)
+            .with(dlqRoutingKey(notificationProperties.routingKey))
 
         return Declarables(
             requestExchange,
@@ -78,6 +102,12 @@ class RabbitConfig(
             resultDlx,
             resultDlq,
             resultDlqBinding,
+            notificationExchange,
+            notificationQueue,
+            notificationBinding,
+            notificationDlx,
+            notificationDlq,
+            notificationDlqBinding,
         )
     }
 

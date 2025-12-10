@@ -14,21 +14,21 @@ class NotificationSender(
 
     private val log = LoggerFactory.getLogger(NotificationSender::class.java)
 
-    fun sendFinalStatus(request: FinalStatusNotificationRequest) {
-        val session = sessionRegistry.sessionFor(request.requesterId)
+    fun sendFinalStatus(event: FinalStatusNotificationEvent) {
+        val session = sessionRegistry.sessionFor(event.requesterId)
         if (session == null || !session.isOpen) {
             log.info(
                 "Requester {} has no active WebSocket session. Skipping final status notification for request {}",
-                request.requesterId,
-                request.requestId,
+                event.requesterId,
+                event.requestId,
             )
             return
         }
 
         val message = FinalStatusNotificationMessage(
-            requestId = request.requestId,
-            finalStatus = request.finalStatus,
-            rejectedBy = request.rejectedBy,
+            requestId = event.requestId,
+            finalStatus = event.finalStatus,
+            rejectedBy = event.rejectedBy,
         )
         val payload = objectMapper.writeValueAsString(message)
 
@@ -37,8 +37,8 @@ class NotificationSender(
         }.onFailure { ex ->
             log.warn(
                 "Failed to deliver notification for request {} to requester {}",
-                request.requestId,
-                request.requesterId,
+                event.requestId,
+                event.requesterId,
                 ex,
             )
         }

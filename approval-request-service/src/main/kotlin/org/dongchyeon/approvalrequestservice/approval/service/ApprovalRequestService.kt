@@ -14,7 +14,8 @@ import org.dongchyeon.approvalrequestservice.approval.model.CreateApprovalStep
 import org.dongchyeon.approvalrequestservice.approval.model.FinalStatus
 import org.dongchyeon.approvalrequestservice.approval.repository.ApprovalRequestRepository
 import org.dongchyeon.approvalrequestservice.employee.EmployeeServiceClient
-import org.dongchyeon.approvalrequestservice.notification.NotificationServiceClient
+import org.dongchyeon.approvalrequestservice.notification.NotificationPublisher
+import org.dongchyeon.approvalrequestservice.notification.FinalStatusNotificationCommand
 import org.springframework.amqp.AmqpException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -26,7 +27,7 @@ class ApprovalRequestService(
     private val sequenceGeneratorService: SequenceGeneratorService,
     private val employeeServiceClient: EmployeeServiceClient,
     private val approvalRequestPublisher: ApprovalRequestPublisher,
-    private val notificationServiceClient: NotificationServiceClient,
+    private val notificationPublisher: NotificationPublisher,
 ) {
     fun create(request: CreateApprovalRequest): CreateApprovalResponse {
         validateStepsSequence(request.steps)
@@ -129,12 +130,14 @@ class ApprovalRequestService(
     }
 
     private fun notifyFinalStatus(document: ApprovalRequestDocument) {
-        notificationServiceClient.sendFinalStatusNotification(
-            requestId = document.requestId,
+        val rejectedBy = document.steps.find { it.status == ApprovalStatus.REJECTED }?.approverId
+        val command = FinalStatusNotificationCommand(
             requesterId = document.requesterId,
-            finalStatus = document.finalStatus,
-            rejectedBy = document.steps.find { it.status == ApprovalStatus.REJECTED }?.approverId,
+            requestId = document.requestId,
+            finalStatus = document.finalStatus.value,
+            rejectedBy = rejectedBy,
         )
+        notificationPublisher.sendFinalStatus(command)
     }
 
     private fun ApprovalRequestDocument.toResponse(): ApprovalRequestResponse =

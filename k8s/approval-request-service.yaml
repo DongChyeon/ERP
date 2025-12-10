@@ -51,8 +51,6 @@ spec:
                   key: password
             - name: EMPLOYEE_SERVICE_URL
               value: http://employee-service:8081
-            - name: NOTIFICATION_SERVICE_URL
-              value: http://notification-service:8084
             - name: APPROVAL_REQUEST_QUEUE
               value: approval.requests.queue
             - name: APPROVAL_REQUEST_EXCHANGE

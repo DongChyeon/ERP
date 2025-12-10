@@ -3,7 +3,7 @@ package org.dongchyeon.notificationservice.notification
 import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonValue
 
-data class FinalStatusNotificationRequest(
+data class FinalStatusNotificationEvent(
     val requesterId: Long,
     val requestId: Long,
     val finalStatus: FinalDecisionStatus,
