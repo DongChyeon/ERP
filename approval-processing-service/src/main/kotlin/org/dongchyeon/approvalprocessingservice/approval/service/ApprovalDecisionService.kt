@@ -5,6 +5,7 @@ import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalDecisionC
 import org.dongchyeon.approvalprocessingservice.approval.model.ApprovalResultPayload
 import org.dongchyeon.common.messaging.ApprovalStatus
 import org.dongchyeon.approvalprocessingservice.approval.repository.InMemoryApprovalRequestRepository
+import java.util.concurrent.ConcurrentHashMap
 import org.springframework.amqp.AmqpException
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -16,50 +17,63 @@ class ApprovalDecisionService(
     private val approvalResultPublisher: ApprovalResultPublisher,
 ) {
 
+    private val requestLocks: MutableMap<Long, Any> = ConcurrentHashMap()
+
     fun decide(command: ApprovalDecisionCommand) {
-        val request = repository.findByRequestId(command.requestId)
-            ?: throw ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Approval request ${command.requestId} not found",
-            )
+        val lock = requestLocks.computeIfAbsent(command.requestId) { Any() }
+        synchronized(lock) {
+            val request = repository.findByRequestId(command.requestId)
+                ?: throw ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "Approval request ${command.requestId} not found",
+                )
 
-        val step = request.steps.firstOrNull { it.approverId == command.approverId }
-            ?: throw ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Approver ${command.approverId} is not assigned to request ${command.requestId}",
-            )
+            val step = request.steps.firstOrNull { it.approverId == command.approverId }
+                ?: throw ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "Approver ${command.approverId} is not assigned to request ${command.requestId}",
+                )
 
-        val updatedSteps = request.steps.map {
-            if (it.step == step.step && it.approverId == command.approverId) {
-                it.copy(status = command.status)
-            } else {
-                it
+            if (step.status != ApprovalStatus.PENDING) {
+                throw ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Approval step ${step.step} has already been processed",
+                )
             }
-        }
 
-        val result = ApprovalResultPayload(
-            requestId = command.requestId,
-            step = step.step,
-            approverId = command.approverId,
-            status = command.status,
-        )
-
-        try {
-            approvalResultPublisher.publish(result)
-            val shouldDelete = command.status == ApprovalStatus.REJECTED ||
-                updatedSteps.none { it.status == ApprovalStatus.PENDING }
-
-            if (shouldDelete) {
-                repository.deleteByRequestId(request.requestId)
-            } else {
-                repository.save(request.copy(steps = updatedSteps))
+            val updatedSteps = request.steps.map {
+                if (it.step == step.step && it.approverId == command.approverId) {
+                    it.copy(status = command.status)
+                } else {
+                    it
+                }
             }
-        } catch (ex: AmqpException) {
-            throw ResponseStatusException(
-                HttpStatus.BAD_GATEWAY,
-                "Failed to notify approval request service",
-                ex,
+
+            val result = ApprovalResultPayload(
+                requestId = command.requestId,
+                step = step.step,
+                approverId = command.approverId,
+                status = command.status,
             )
+
+            try {
+                approvalResultPublisher.publish(result)
+                val shouldDelete = command.status == ApprovalStatus.REJECTED ||
+                    updatedSteps.none { it.status == ApprovalStatus.PENDING }
+
+                if (shouldDelete) {
+                    repository.deleteByRequestId(request.requestId)
+                    requestLocks.remove(command.requestId, lock)
+                } else {
+                    repository.save(request.copy(steps = updatedSteps))
+                }
+            } catch (ex: AmqpException) {
+                throw ResponseStatusException(
+                    HttpStatus.BAD_GATEWAY,
+                    "Failed to notify approval request service",
+                    ex,
+                )
+            }
         }
     }
 
