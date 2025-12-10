@@ -3,7 +3,7 @@ set -euo pipefail
 
 KUBECONFIG_PATH="${KUBECONFIG:-$HOME/.kube/erp-cluster}"
 NAMESPACE="${NAMESPACE:-ingress-nginx}"
-INSTALL_METALLB="${INSTALL_METALLB:-false}"
+INSTALL_METALLB="${INSTALL_METALLB:-true}"
 METALLB_NAMESPACE="${METALLB_NAMESPACE:-metallb-system}"
 METALLB_ADDRESS_POOL="${METALLB_ADDRESS_POOL:-192.168.0.240-192.168.0.250}"
 
@@ -21,7 +21,7 @@ echo "[1/2] NGINX Ingress Controller 설치"
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
   --namespace "$NAMESPACE" --create-namespace \
   --set controller.metrics.enabled=true \
-  --set controller.service.type=${INGRESS_SERVICE_TYPE:-NodePort} \
+  --set controller.service.type=LoadBalancer \
   --set controller.service.nodePorts.http=${INGRESS_HTTP_NODEPORT:-30080} \
   --set controller.service.nodePorts.https=${INGRESS_HTTPS_NODEPORT:-30443}
 

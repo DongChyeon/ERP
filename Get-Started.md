@@ -78,15 +78,13 @@ ENV_FILE=env/secrets ./scripts/deploy-datastores.sh approval
 
 ### 5.4 Ingress / MetalLB
 
-NodePort로 충분하면 기본값 그대로 실행하고, 자체 LoadBalancer IP가 필요하면 `INSTALL_METALLB=true`를 지정해 주세요.
+기본으로 LoadBalancer 타입 + MetalLB(IP 풀은 `METALLB_ADDRESS_POOL`)를 설치합니다. IP 풀을 학교 네트워크에서 사용할 수 있는 범위로 바꾸고 실행해 주세요.
 
 ```bash
-./scripts/install-ingress.sh
-# 또는
-INSTALL_METALLB=true METALLB_ADDRESS_POOL=192.168.0.240-192.168.0.250 ./scripts/install-ingress.sh
+METALLB_ADDRESS_POOL=192.168.0.240-192.168.0.250 ./scripts/install-ingress.sh
 ```
 
-MetalLB를 사용하면 해당 IP 풀을 학교 네트워크에서 사용할 수 있는 범위로 바꿔야 합니다. Ingress를 외부에서 접근하기 위해선 DNS 또는 `/etc/hosts`에 Ingress IP ↔ 원하는 도메인(예: `approval.erp.local`) 매핑이 필요합니다.
+MetalLB가 할당한 IP는 `kubectl get svc -n ingress-nginx`로 확인할 수 있습니다. 인그레스를 외부에서 접근하려면 DNS 또는 `/etc/hosts`에 해당 IP ↔ 원하는 도메인(예: `approval.erp.local`) 매핑을 추가하거나, `curl -H "Host: employee.erp.local" http://<할당된-IP>/...` 방식으로 테스트하면 됩니다.
 
 ### 5.5 애플리케이션 매니페스트 적용
 
