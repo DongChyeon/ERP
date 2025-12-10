@@ -1,0 +1,99 @@
+@startuml
+title ERP 시스템
+
+skinparam componentStyle rectangle
+skinparam defaultTextAlignment center
+
+skinparam rectangle {
+  BorderColor #1F4B99
+  BackgroundColor<<svc>> #E8F0FF
+  BackgroundColor<<infra>> #F7F7EA
+  BackgroundColor<<data>> #EFFFF7
+}
+
+actor "Employee /\nApprover\n(Web · Mobile · Admin)" as User
+
+cloud "Solid Cloud 네트워크\n(VPN / Internet)" as VPN
+User --> VPN : HTTP / WS
+
+component "MetalLB\n로드밸런서 IP" <<infra>> as MetalLB
+VPN --> MetalLB
+
+node "Kubernetes 클러스터\nNamespace: approval" {
+
+  component "Ingress Controller\n(ingress-nginx)" <<infra>> as Ingress
+  MetalLB --> Ingress : 호스트 기반 라우팅
+
+  note right of Ingress
+    employee.erp.local   → employee-service:8081
+    approval.erp.local   → approval-request-service:8082
+    processing.erp.local → approval-processing-service:8083
+    notification.erp.local → notification-service:8084
+  end note
+
+  folder "Secrets" as Secrets {
+    rectangle "mysql-credentials"
+    rectangle "mongo-credentials"
+    rectangle "rabbitmq-credentials"
+  }
+
+  package "Application Layer (Deployments)" {
+
+    package "employee-service" <<svc>> {
+      component "Service\nClusterIP 8081" as EmpSvc <<infra>>
+      component "Pod\nSpring Boot\n(env: mysql-credentials)" as EmpPod <<svc>>
+    }
+    Ingress --> EmpSvc
+    EmpSvc --> EmpPod
+
+    package "approval-request-service" <<svc>> {
+      component "Service\nClusterIP 8082" as ReqSvc <<infra>>
+      component "Pod\nSpring Boot\n(env: mongo + rabbit)" as ReqPod <<svc>>
+    }
+    Ingress --> ReqSvc
+    ReqSvc --> ReqPod
+
+    package "approval-processing-service" <<svc>> {
+      component "Service\nClusterIP 8083" as ProcSvc <<infra>>
+      component "Pod\nSpring Boot\n(env: rabbit)" as ProcPod <<svc>>
+    }
+    Ingress --> ProcSvc
+    ProcSvc --> ProcPod
+
+    package "notification-service" <<svc>> {
+      component "Service\nClusterIP 8084" as NotiSvc <<infra>>
+      component "Pod\nWebSocket 소비자\nSpring Boot" as NotiPod <<svc>>
+    }
+    Ingress --> NotiSvc
+    NotiSvc --> NotiPod
+  }
+
+  package "Data Layer (StatefulSet)" {
+    database "MySQL\nStatefulSet + PVC\n(10Gi)" as MySQL <<data>>
+    database "MongoDB\nStatefulSet + PVC\n(10Gi)" as Mongo <<data>>
+    queue "RabbitMQ\nStatefulSet + PVC\n(5Gi)" as Rabbit <<infra>>
+  }
+
+  ' 내부 트래픽 흐름
+  EmpPod --> MySQL : JDBC 3306
+
+  ReqPod --> Mongo : Spring Data MongoDB
+  ReqPod --> Rabbit : 승인 요청 / 알림 메시지
+
+  ProcPod --> Rabbit : 요청 소비 / 결과 발행
+
+  ReqPod --> EmpSvc : GET /employees/{id}
+
+  NotiPod --> User : WebSocket\n/ws?id={employeeId}
+
+  ' Secret 연결
+  Secrets .. EmpPod
+  Secrets .. ReqPod
+  Secrets .. ProcPod
+  Secrets .. NotiPod
+  Secrets .. MySQL
+  Secrets .. Mongo
+  Secrets .. Rabbit
+}
+
+@enduml
