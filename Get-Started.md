@@ -36,10 +36,7 @@ cp env/secrets.example env/secrets
 빠르게 전체 스택을 올리고 싶다면 Compose를 사용하세요.
 
 ```bash
-docker compose up -d mysql mongo rabbitmq
-# 초기 스키마 설치 (최초 1회) -> mysql 컨테이너가 scripts/init_mysql.sql을 자동 실행
-# 이후 애플리케이션 컨테이너 기동
-docker compose up -d employee-service approval-request-service approval-processing-service notification-service
+./scripts/deploy-docker-compose.sh
 ```
 
 확인용으로 `docker compose logs -f employee-service`, `http://localhost:8081/actuator/health` 등을 점검합니다.
