@@ -15,7 +15,9 @@ fi
 export KUBECONFIG="$KUBECONFIG_PATH"
 
 helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx >/dev/null 2>&1 || true
-helm repo update >/dev/null
+helm repo update >/dev/null || {
+  echo "경고: Helm 저장소 업데이트 실패. 네트워크 연결을 확인하세요." >&2
+}
 
 echo "[1/2] NGINX Ingress Controller 설치"
 helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
@@ -28,7 +30,9 @@ helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
 if [[ "$INSTALL_METALLB" == "true" ]]; then
   echo "[2/2] MetalLB 설치"
   kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.12/config/manifests/metallb-native.yaml
-  kubectl wait --namespace "$METALLB_NAMESPACE" --for=condition=available deployment/controller --timeout=120s || true
+  kubectl wait --namespace "$METALLB_NAMESPACE" --for=condition=available deployment/controller --timeout=120s || {
+    echo "경고: MetalLB 컨트롤러가 할당된 시간 내에 준비되지 않았습니다. 'kubectl describe pod -n $METALLB_NAMESPACE'으로 상태를 확인하세요." >&2
+  }
   cat <<YAML | kubectl apply -f -
 apiVersion: metallb.io/v1beta1
 kind: IPAddressPool
