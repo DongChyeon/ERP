@@ -1,5 +1,5 @@
 ### 지정된 결재자의 대기 목록 조회
-GET http://localhost:8083/process/1
+GET http://localhost:8083/process/24
 Accept: application/json
 
 ### 대기 중인 요청이 없을 때
