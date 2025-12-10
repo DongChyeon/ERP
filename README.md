@@ -1,6 +1,6 @@
 # ERP Approval System
 
-ERP 승인 시스템은 직원 관리, 승인 요청/처리, 실시간 알림까지 포함한 멀티 서비스 아키텍처입니다. 본 문서는 전체 구조, 호출 흐름, API 요약 및 실행 방법을 간단히 안내합니다.
+ERP 승인 시스템은 직원 관리, 승인 요청/처리, 실시간 알림까지 포함한 마이크로 서비스 아키텍처입니다. 본 문서는 전체 구조, 호출 흐름, API 요약 및 실행 방법을 간단히 안내합니다.
 
 ## Architecture Overview
 
@@ -37,7 +37,7 @@ ERP 승인 시스템은 직원 관리, 승인 요청/처리, 실시간 알림까
 
 ## 실행 방법
 
-상세 실행 절차와 운영 팁은 [`Get-Started.md`](docs/get-started.md)를 참고하세요. 아래는 빠른 개요입니다.
+상세 실행 절차와 운영 팁은 [`docs/get-started.md`](docs/get-started.md)를 참고하세요. 아래는 빠른 개요입니다.
 
 ### 1. Docker Compose (로컬)
 ```bash
@@ -55,4 +55,13 @@ curl http://localhost:8081/actuator/health
 5. MetalLB + Ingress 설치 후 `*.erp.local`을 `/etc/hosts`에 매핑
 
 ### 테스트 시나리오
-`http/scenario*/` 폴더에 전체 승인/반려/동시성/알림/부하 테스트 스크립트가 있으므로 `IntelliJ HTTP Client`나 `REST Client` 확장으로 쉽게 실행할 수 있습니다.
+`scripts/scenarios/common.sh` + `scenario*_*.sh`를 통해 CLI에서 다양한 검증을 실행할 수 있습니다.
+```bash
+# 예: 전체 승인, 반려, 동시성, 대기 목록, WebSocket 알림, 대량 제출
+./scripts/scenarios/scenario1_full_approval.sh
+./scripts/scenarios/scenario2_rejection.sh
+./scripts/scenarios/scenario3_concurrent.sh
+./scripts/scenarios/scenario4_pending.sh
+./scripts/scenarios/scenario5_notification.sh
+./scripts/scenarios/scenario6_bulk.sh
+```

@@ -83,6 +83,14 @@ METALLB_ADDRESS_POOL=192.168.0.240-192.168.0.250 ./scripts/install-ingress.sh
 
 MetalLB가 할당한 IP는 `kubectl get svc -n ingress-nginx`로 확인할 수 있습니다. 인그레스를 외부에서 접근하려면 DNS 또는 `/etc/hosts`에 해당 IP ↔ 원하는 도메인(예: `approval.erp.local`) 매핑을 추가하거나, `curl -H "Host: employee.erp.local" http://<할당된-IP>/...` 방식으로 테스트하면 됩니다.
 
+```bash
+sudo tee -a /etc/hosts <<EOF
+192.168.0.240 employee.erp.local approval.erp.local processing.erp.local notification.erp.local
+EOF
+```
+
+이렇게 매핑하고 나면 `http://employee.erp.local/actuator/health` 또는 `ws://notification.erp.local/ws?...`와 같이 도메인 기반으로 접근할 수 있습니다.
+
 ### 5.5 애플리케이션 매니페스트 적용
 
 `scripts/deploy-apps.sh`는 각 서비스 디렉터리에서 Gradle 빌드 → Docker 이미지 생성 → (선택적으로) 레지스트리 푸시 → 매니페스트 적용 → `kubectl set image`까지 한 번에 처리합니다. 기본 설정은 `REGISTRY=registry.local/approval`, `IMAGE_TAG=latest`, `BUILD_IMAGES=true`, `PUSH_IMAGES=true`이며, 상황에 따라 환경 변수로 덮어쓸 수 있습니다.
