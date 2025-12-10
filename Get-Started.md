@@ -48,7 +48,7 @@ cp env/secrets.example env/secrets
 로컬 PC 터미널에서 VPN을 켠 뒤 `scripts/setup-local.sh`를 실행하면 `~/.kube/erp-cluster`에 kubeconfig를 복사하고 `kubectl/helm/kustomize`를 설치합니다.
 
 ```bash
-./scripts/setup-local.sh
+./scripts/setup-local.sh 10.0.10.189 ubuntu   # (IP, 사용자 계정 전달 가능)
 source ~/.zshrc # 또는 ~/.bashrc
 ./scripts/verify-cluster.sh
 ```
@@ -103,8 +103,8 @@ MetalLB가 할당한 IP는 `kubectl get svc -n ingress-nginx`로 확인할 수 �
 > 이렇게 해야 노드가 HTTP 레지스트리에서 이미지를 pull할 수 있습니다. 다른 레지스트리를 사용 중이라면 해당 서비스의 IP/포트를 `REGISTRY`에 입력하고, 노드 런타임에도 신뢰 구성을 적용하세요.
 
 ```bash
-# 두 번째 인자로 레지스트리 경로를 직접 넘길 수도 있습니다.
-DOCKER_DEFAULT_PLATFORM=linux/amd64 REGISTRY=my-registry.local/approval IMAGE_TAG=$(date +%Y%m%d%H%M%S) MANIFEST_DIR=k8s ./scripts/deploy-apps.sh approval my-registry.local/approval
+# 두 번째 인자로 레지스트리 경로를 직접 넘길 수도 있습니다. (예: 10.0.10.189:5000/approval) (아래 `<REGISTRY/PATH>에 채워주세요)
+DOCKER_DEFAULT_PLATFORM=linux/amd64 IMAGE_TAG=$(date +%Y%m%d%H%M%S) MANIFEST_DIR=k8s ./scripts/deploy-apps.sh approval <REGISTRY/PATH>
 ```
 
 이 명령은 `k8s/kustomization.yaml`을 기반으로 Deployments, Services, Ingress를 모두 적용하고, 지정한 이미지 태그로 각 Deployment를 업데이트합니다. `BUILD_IMAGES=false` 또는 `PUSH_IMAGES=false`로 지정하면 해당 단계를 건너뛰고 `kubectl` 적용만 수행합니다. 배포 후엔 다음 명령으로 상태를 확인하세요.

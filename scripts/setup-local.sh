@@ -38,9 +38,15 @@ case "$OSTYPE" in
 esac
 
 mkdir -p "$HOME/.kube"
+REMOTE_HOST="${1:-10.0.10.189}"
+REMOTE_USER="${2:-${REMOTE_USER:-ubuntu}}"
+
 KUBECONFIG_LOCAL="$HOME/.kube/erp-cluster"
 if [ ! -f "$KUBECONFIG_LOCAL" ]; then
-  scp "ubuntu@10.0.10.189:/home/ubuntu/.kube/config" "$KUBECONFIG_LOCAL"
+  if ! scp "${REMOTE_USER}@${REMOTE_HOST}:/home/${REMOTE_USER}/.kube/config" "$KUBECONFIG_LOCAL"; then
+    echo "kubeconfig를 복사하는 데 실패했습니다. REMOTE_HOST=${REMOTE_HOST}, REMOTE_USER=${REMOTE_USER}를 확인하세요." >&2
+    exit 1
+  fi
   chmod 600 "$KUBECONFIG_LOCAL"
   KUBECONFIG="$KUBECONFIG_LOCAL" kubectl config rename-context kubernetes-admin@kubernetes erp-cluster
   KUBECONFIG="$KUBECONFIG_LOCAL" kubectl config use-context erp-cluster
